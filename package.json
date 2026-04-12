@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev:engine & npm run dev:web",
+    "dev:engine": "npm --workspace=packages/engine run dev",
+    "dev:web": "npm --workspace=packages/web run dev",
+    "build": "npm --workspace=packages/engine run build && npm --workspace=packages/web run build",
+    "build:engine": "npm --workspace=packages/engine run build"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

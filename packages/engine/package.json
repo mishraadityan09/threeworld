@@ -1,0 +1,84 @@
+{
+  "name": "3dsvg",
+  "version": "0.2.1",
+  "description": "The easiest way to turn SVGs into interactive React 3D components",
+  "author": "Renato Costa <renatocesarcp@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/renatoworks/3dsvg.git",
+    "directory": "packages/engine"
+  },
+  "homepage": "https://3dsvg.design",
+  "keywords": [
+    "3d",
+    "svg",
+    "react",
+    "three",
+    "threejs",
+    "embed",
+    "widget",
+    "pbr",
+    "webgl"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./scene": {
+      "import": "./dist/scene.js",
+      "types": "./dist/scene.d.ts"
+    },
+    "./controls": {
+      "import": "./dist/controls.js",
+      "types": "./dist/controls.d.ts"
+    },
+    "./materials": {
+      "import": "./dist/materials.js",
+      "types": "./dist/materials.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types.js",
+      "types": "./dist/types.d.ts"
+    },
+    "./use-font": {
+      "import": "./dist/use-font.js",
+      "types": "./dist/use-font.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "llms.txt"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18",
+    "three": ">=0.160.0",
+    "@react-three/fiber": ">=9",
+    "@react-three/drei": ">=10"
+  },
+  "devDependencies": {
+    "react": "^19",
+    "react-dom": "^19",
+    "three": "^0.183.2",
+    "@react-three/fiber": "^9.5.0",
+    "@react-three/drei": "^10.7.7",
+    "@types/react": "^19",
+    "@types/three": "^0.183.1",
+    "opentype.js": "^1.3.4",
+    "@types/opentype.js": "^1.3.9",
+    "tsup": "^8",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "opentype.js": "^1.3.4"
+  }
+}

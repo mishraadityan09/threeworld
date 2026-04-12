@@ -1,0 +1,148 @@
+# 3dsvg
+
+Embeddable React component that turns SVGs and text into interactive 3D objects with PBR materials, textures, animations, and shadows.
+
+npm: https://www.npmjs.com/package/3dsvg
+Visual editor: https://3dsvg.design
+GitHub: https://github.com/renatoworks/3dsvg
+
+## Install
+
+npm install 3dsvg
+
+Peer dependencies: react, react-dom, three, @react-three/fiber, @react-three/drei.
+
+## Import
+
+import { SVG3D } from "3dsvg";
+
+For Next.js (SSR), use dynamic import:
+
+const SVG3D = dynamic(
+  () => import("3dsvg").then((m) => ({ default: m.SVG3D })),
+  { ssr: false }
+);
+
+## Component: SVG3D
+
+Renders a single 3D object. Provide either `text` or `svg` as content.
+
+### Content props (provide one)
+
+- text: string — Text to render in 3D.
+- font: string — Google Font name. Default: "DM Sans". Available: "DM Sans", "Bebas Neue", "Playfair Display", "Righteous", "Black Ops One", "Permanent Marker", "Rubik Mono One", "Pacifico", "Oswald", "Archivo Black".
+- svg: string — SVG markup or a URL. Accepts raw `<svg>...</svg>` markup, absolute URLs (`https://...`), or path URLs (`/logo.svg`, `./icon.svg`). URLs are fetched automatically. Paths must have a non-none fill.
+
+### Shape props
+
+- depth: number (default 1) — Extrusion depth. Higher = thicker.
+- smoothness: number (default 0.2) — Bevel and curve quality, 0–1.
+- color: string (default "#ffffff") — Base color hex.
+
+### Material props
+
+- material: "default" | "plastic" | "metal" | "glass" | "rubber" | "chrome" | "gold" | "clay" | "emissive" | "holographic" — Preset. Default: "default".
+- metalness: number — Override preset metalness (0–1).
+- roughness: number — Override preset roughness (0–1).
+- opacity: number — Override preset opacity (0–1). Below 1 enables glass-like transmission.
+- wireframe: boolean (default false) — Wireframe mode.
+
+### Texture props
+
+- texture: string — Image URL to map onto the 3D surface.
+- textureRepeat: number (default 1) — How many times the texture tiles.
+- textureRotation: number (default 0) — Texture rotation in radians.
+- textureOffset: [number, number] (default [0, 0]) — UV offset [x, y].
+
+When a texture is set, the base color is overridden to white so the texture renders at full fidelity.
+
+### Lighting props
+
+- lightPosition: [number, number, number] (default [5, 8, 5]) — Key light position [x, y, z].
+- lightIntensity: number (default 1.2) — Key light brightness.
+- ambientIntensity: number (default 0.3) — Ambient fill light.
+- shadow: boolean (default true) — Show contact shadows.
+
+### Camera props
+
+- rotationX: number (default 0) — Initial X rotation in radians.
+- rotationY: number (default 0) — Initial Y rotation in radians.
+- zoom: number (default 8) — Camera Z distance. Auto-adjusts on narrow/portrait viewports to keep the object visible.
+- fov: number (default 50) — Field of view in degrees.
+
+### Interaction props
+
+- interactive: boolean (default true) — Master toggle. false disables drag, zoom, and cursor orbit.
+- cursorOrbit: boolean (default true) — Object subtly follows cursor.
+- orbitStrength: number (default 0.15) — Cursor-follow strength in radians.
+- draggable: boolean (default true) — Allow drag to rotate.
+- scrollZoom: boolean (default false) — Allow scroll to zoom. Off by default so embeds don't hijack page scroll.
+- resetOnIdle: boolean (default false) — Return to default position after inactivity.
+- resetDelay: number (default 2) — Seconds before reset.
+
+### Animation props
+
+- animate: "none" | "spin" | "float" | "pulse" | "wobble" | "spinFloat" | "swing" — Loop animation. Default: "none".
+- animateSpeed: number (default 1) — Speed multiplier.
+- animateReverse: boolean (default false) — Reverse direction.
+
+### Intro animation props
+
+- intro: "zoom" | "fade" | "none" — Entrance animation. Default: "zoom".
+- introDuration: number (default 2.5) — Duration in seconds.
+- introFrom: { zoom?: number; opacity?: number } — Start state.
+- introTo: { zoom?: number; opacity?: number } — End state.
+
+### Layout props
+
+- width: string | number (default "100%") — Container width.
+- height: string | number (default "100%") — Container height.
+- background: string (default "transparent") — Canvas background color.
+- className: string — CSS class on the wrapper div.
+
+### Event props
+
+- onReady: () => void — Fires when WebGL is ready and first frame is rendered.
+- onAnimationComplete: () => void — Fires when intro finishes.
+- onLoadingChange: (loading: boolean, progress: number) => void — Fires during geometry processing with loading state and progress (0-100). Geometry is processed asynchronously in batches to keep the browser responsive. Use this to show custom loading UI for complex SVGs.
+
+### Advanced props
+
+- resetKey: number — Increment to force position reset.
+- registerCanvas: (canvas: HTMLCanvasElement) => void — Callback with the WebGL canvas element.
+- children: React.ReactNode — Extra 3D elements rendered inside the scene.
+
+## Examples
+
+Minimal text:
+<SVG3D text="Hello" />
+
+Chrome spinning text:
+<SVG3D text="3D" font="Bebas Neue" animate="spin" depth={2} />
+
+SVG from file:
+<SVG3D svg="/logo.svg" material="gold" animate="float" />
+
+Remote SVG with texture:
+<SVG3D
+  svg="https://cdn.example.com/icon.svg"
+  material="gold"
+  texture="https://example.com/marble.jpg"
+  textureRepeat={2}
+/>
+
+Custom lighting:
+<SVG3D text="Lit" material="metal" lightPosition={[0, 10, 3]} lightIntensity={2} ambientIntensity={0.1} />
+
+No shadows, static:
+<SVG3D text="Clean" material="clay" shadow={false} interactive={false} intro="none" />
+
+## Important notes
+
+- SVG paths MUST have a non-transparent fill color. Paths with fill="none" will not be detected.
+- Creates a WebGL context. Browsers limit these to ~8-16 per page — keep to 3-4 instances max.
+- Requires a browser environment (WebGL). Use dynamic imports in Next.js for SSR safety.
+
+## License
+
+MIT
