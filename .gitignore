@@ -44,3 +44,4 @@ yarn-error.log*
 next-env.d.ts
 packages/web/.next/
 packages/engine/dist/
+.npm-cache/
