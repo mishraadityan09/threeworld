@@ -99,6 +99,18 @@ export function LoopAnimation({ type, speed, reverse, meshRef }: LoopAnimationPr
   const initialY = useRef<number | null>(null);
   const dir = reverse ? -1 : 1;
 
+  useEffect(() => {
+    elapsed.current = 0;
+    initialY.current = null;
+
+    const mesh = meshRef.current;
+    if (!mesh) return;
+
+    mesh.position.set(0, 0, 0);
+    mesh.rotation.set(0, 0, 0);
+    mesh.scale.set(1, 1, 1);
+  }, [type, meshRef]);
+
   useFrame((_, delta) => {
     if (type === "none" || !meshRef.current) return;
     elapsed.current += delta * speed;
