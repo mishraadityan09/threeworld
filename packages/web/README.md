@@ -1,6 +1,6 @@
-# 3dsvg — Web Editor
+# threeworld — Web Editor
 
-Visual editor for designing 3D objects from SVGs, text, and pixel art. This is the app behind [3dsvg.design](https://3dsvg.design).
+Visual editor for designing 3D objects from SVGs, text, and pixel art.
 
 ## Development
 
@@ -47,4 +47,4 @@ The web editor imports the engine as a workspace dependency (`"3dsvg": "file:../
 
 ## License
 
-MIT — [Renato Costa](https://renato.works)
+MIT — Aditya Mishra

@@ -22,22 +22,20 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "3dsvg — The easiest way to turn SVGs into 3D",
-  description: "Turn any SVG into interactive 3D objects. Animate and export as 4K image or video. 100% free, no account or subscription needed.",
-  metadataBase: new URL("https://3dsvg.design"),
+  title: "threeworld — Turn SVGs into interactive 3D",
+  description: "Turn any SVG, text, or pixel art into an interactive 3D object. Animate and export as 4K image, video, or 3D model.",
   openGraph: {
-    title: "3dsvg — The easiest way to turn SVGs into 3D",
-    description: "Turn any SVG into interactive 3D objects. Animate and export as 4K image or video. 100% free, no account or subscription needed.",
-    url: "https://3dsvg.design",
-    siteName: "3dsvg",
+    title: "threeworld — Turn SVGs into interactive 3D",
+    description: "Turn any SVG, text, or pixel art into an interactive 3D object. Animate and export as 4K image, video, or 3D model.",
+    siteName: "threeworld",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "3dsvg — The easiest way to turn SVGs into 3D",
-    description: "Turn any SVG into interactive 3D objects. Animate and export as 4K image or video. 100% free, no account or subscription needed.",
+    title: "threeworld — Turn SVGs into interactive 3D",
+    description: "Turn any SVG, text, or pixel art into an interactive 3D object. Animate and export as 4K image, video, or 3D model.",
   },
-  keywords: ["3d", "svg", "react", "three.js", "embed", "webgl", "pixel art", "text to 3d", "svg to 3d", "free"],
+  keywords: ["3d", "svg", "react", "three.js", "embed", "webgl", "pixel art", "text to 3d", "svg to 3d", "threeworld"],
 };
 
 export default function RootLayout({

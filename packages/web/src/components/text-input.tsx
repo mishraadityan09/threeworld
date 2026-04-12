@@ -145,18 +145,18 @@ export function TextInput({ onSvgChange, onTextChange, onFontChange, initialText
   }, [active]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <Input
         ref={inputRef}
         placeholder="Type something..."
         value={text}
         onChange={(e) => { setText(e.target.value); onTextChange?.(e.target.value); }}
-        className="h-8 text-xs"
+        className="h-10 text-sm"
       />
       <select
         value={fontName}
         onChange={(e) => { setFontName(e.target.value); onFontChange?.(e.target.value); }}
-        className="w-full h-8 rounded-md border border-input bg-background/50 px-3 text-xs ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring"
+        className="w-full h-10 rounded-md border border-input bg-background/50 px-3 text-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring"
       >
         {FONTS.map((f) => (
           <option key={f.name} value={f.name}>
@@ -165,7 +165,7 @@ export function TextInput({ onSvgChange, onTextChange, onFontChange, initialText
         ))}
       </select>
       {loading && (
-        <p className="text-[10px] text-muted-foreground animate-pulse">
+        <p className="text-[11px] text-muted-foreground animate-pulse">
           Loading font...
         </p>
       )}

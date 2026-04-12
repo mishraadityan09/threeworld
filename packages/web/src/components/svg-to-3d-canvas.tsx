@@ -53,6 +53,32 @@ function getGlowTexture() {
   return _glowTexture;
 }
 
+// Soft white radial — used for tintable backdrop glow sprites
+function createSoftGlow(): THREE.Texture {
+  const size = 512;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  g.addColorStop(0,    "rgba(255,255,255,1)");
+  g.addColorStop(0.12, "rgba(255,255,255,0.75)");
+  g.addColorStop(0.35, "rgba(255,255,255,0.25)");
+  g.addColorStop(0.65, "rgba(255,255,255,0.06)");
+  g.addColorStop(1,    "rgba(255,255,255,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  const t = new THREE.CanvasTexture(canvas);
+  t.needsUpdate = true;
+  return t;
+}
+
+let _softGlow: THREE.Texture | null = null;
+function getSoftGlow() {
+  if (!_softGlow) _softGlow = createSoftGlow();
+  return _softGlow;
+}
+
 function GlowSprite({ intensity }: { intensity: number }) {
   const scale = 1.5 + intensity * 0.8;
   return (
@@ -65,6 +91,48 @@ function GlowSprite({ intensity }: { intensity: number }) {
         blending={THREE.AdditiveBlending}
       />
     </sprite>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// SpaceLighting — backdrop glow sprites + matching point lights
+// Sprites provide the visual; point lights cast that color onto the model.
+// Both render independently of model load state.
+// ---------------------------------------------------------------------------
+
+function SpaceLighting() {
+  const map = getSoftGlow();
+  return (
+    <>
+      {/* ── Point lights — illuminate the 3D model ── */}
+      <pointLight position={[7, 5, 5]}   intensity={3.5} color="#ef6423" distance={40} decay={1.8} />
+      <pointLight position={[-8, 1, -4]} intensity={2.2} color="#2040c8" distance={35} decay={1.8} />
+      <pointLight position={[0, -6, 3]}  intensity={0.7} color="#6020a0" distance={20} decay={2} />
+
+      {/* ── Backdrop glow sprites — always visible, behind the model ── */}
+      {/* Orange "sun" — top-right, far behind */}
+      <sprite position={[5, 3.5, -5]} scale={[18, 18, 1]} renderOrder={-5}>
+        <spriteMaterial map={map} color="#ef6423" transparent opacity={0.55}
+          depthWrite={false} blending={THREE.AdditiveBlending} />
+      </sprite>
+      {/* Tighter bright core of the sun */}
+      <sprite position={[5.2, 3.6, -4.5]} scale={[7, 7, 1]} renderOrder={-4}>
+        <spriteMaterial map={map} color="#ffcc66" transparent opacity={0.7}
+          depthWrite={false} blending={THREE.AdditiveBlending} />
+      </sprite>
+
+      {/* Blue nebula — left, far behind */}
+      <sprite position={[-7, 0.5, -5]} scale={[16, 16, 1]} renderOrder={-5}>
+        <spriteMaterial map={map} color="#2050d0" transparent opacity={0.4}
+          depthWrite={false} blending={THREE.AdditiveBlending} />
+      </sprite>
+
+      {/* Violet underglow — bottom */}
+      <sprite position={[0, -5, -4]} scale={[14, 14, 1]} renderOrder={-5}>
+        <spriteMaterial map={map} color="#6018a0" transparent opacity={0.25}
+          depthWrite={false} blending={THREE.AdditiveBlending} />
+      </sprite>
+    </>
   );
 }
 
@@ -203,8 +271,8 @@ export const defaultLightSettings: LightSettings = {
   keyX: 2,
   keyY: 2,
   keyZ: 4,
-  keyIntensity: 1.2,
-  ambientIntensity: 0.3,
+  keyIntensity: 3.0,
+  ambientIntensity: 0.8,
   shadowEnabled: true,
 };
 
@@ -326,7 +394,7 @@ export function SVGTo3DCanvas({
       animateSpeed={animateSpeed}
       animateReverse={animateReverse}
       scrollZoom
-      background="#0a0a0a"
+      background="#05060f"
       width="100%"
       height="100%"
       intro="zoom"
@@ -342,6 +410,9 @@ export function SVGTo3DCanvas({
         lightOrbRef={lightOrbRef}
         bgPlaneRef={bgPlaneRef}
       />
+
+      {/* Space lighting — matches the CSS background glow regions */}
+      <SpaceLighting />
 
       {/* Light position indicator */}
       <group ref={lightOrbRef}>

@@ -12,7 +12,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import { Settings2, CodeXml, MessageCircle } from "lucide-react";
+import { Settings2, Pencil, Type, Code, FileUp } from "lucide-react";
 import type { Group } from "three";
 import { defaultLightSettings, type LightSettings } from "@/components/svg-to-3d-canvas";
 import { AnimatePresence } from "framer-motion";
@@ -25,8 +25,6 @@ import {
 import { InputPanel } from "@/components/input-panel";
 import { ControlsPanel } from "@/components/controls-panel";
 import { ExportModal } from "@/components/export-bar";
-import { EmbedDialog } from "@/components/embed-dialog";
-import { Freedback } from "@/components/freedback";
 import {
   defaultTextureSettings,
   defaultMaterialSettings,
@@ -55,7 +53,7 @@ export default function Home() {
   const [depth, setDepth] = useState(1);
   const [smoothness, setSmoothness] = useState(0.6);
   const [color, setColor] = useState("#4f46e5");
-  const [bgColor, setBgColor] = useState("#6961ff");
+  const [bgColor, setBgColor] = useState("#000000");
   const [textureUrl, setTextureUrl] = useState<string | null>(null);
   const [textureSettings, setTextureSettings] =
     useState<TextureSettings>(defaultTextureSettings);
@@ -79,8 +77,7 @@ export default function Home() {
   const [lightSettings, setLightSettings] = useState<LightSettings>(defaultLightSettings);
   const [currentText, setCurrentText] = useState("3DSVG");
   const [currentFont, setCurrentFont] = useState("Rubik Mono One");
-  const [embedOpen, setEmbedOpen] = useState(false);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [inputPanelOpen, setInputPanelOpen] = useState(false);
 
   // --- Export bar ---
   const [exportOpen] = useState(true);
@@ -235,87 +232,114 @@ export default function Home() {
         }}
       />
 
-      {/* Layer 2: UI */}
-      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col p-5">
-        {/* Left toolbar + content panel */}
-        <motion.div
-          initial={{ opacity: 0, x: -12 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.25, delay: 0.2 }}
-          className={`pointer-events-none relative ${topPanel === "toolbar" ? "z-20" : "z-[8]"}`}
-        >
-          <InputPanel
-            inputTab={inputTab}
-            onInputTabChange={(tab) => { setInputTab(tab); setTopPanel("toolbar"); }}
-            customSvg={customSvg}
-            onCustomSvgChange={setCustomSvg}
-            onFileSvgChange={setFileSvg}
-            onPixelSvgChange={handlePixelSvgChange}
-            onTextSvgChange={handleTextSvgChange}
-            onTextChange={setCurrentText}
-            onFontChange={setCurrentFont}
-            initialText={currentText}
-            initialFont={currentFont}
-            droppedFile={droppedFile}
-          />
-        </motion.div>
-
+      {/* Layer 2: Edit panel — left side, vertically centered */}
+      <div className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 md:pl-6 ${topPanel === "toolbar" ? "z-20" : "z-[8]"}`}>
+        <div className="w-[min(420px,calc(100vw-1.5rem))]">
+        <InputPanel
+          inputTab={inputTab}
+          onInputTabChange={(tab) => { setInputTab(tab); setTopPanel("toolbar"); setControlsOpen(false); }}
+          customSvg={customSvg}
+          onCustomSvgChange={setCustomSvg}
+          onFileSvgChange={setFileSvg}
+          onPixelSvgChange={handlePixelSvgChange}
+          onTextSvgChange={handleTextSvgChange}
+          onTextChange={setCurrentText}
+          onFontChange={setCurrentFont}
+          initialText={currentText}
+          initialFont={currentFont}
+          droppedFile={droppedFile}
+          hideToolbar
+          open={inputPanelOpen}
+          onOpenChange={setInputPanelOpen}
+        />
+        </div>
       </div>
 
-      {/* Top-right: embed + gear buttons */}
-      <div className={`pointer-events-auto absolute top-5 right-5 flex gap-2 ${topPanel === "settings" ? "z-20" : "z-[8]"}`}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setFeedbackOpen(true)}
-              className="rounded-full bg-card/70 backdrop-blur-xl border border-white/[0.06] shadow-[0_8px_32px_oklch(0_0_0/0.4)] h-10 w-10"
-            >
-              <MessageCircle className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">Feedback</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setEmbedOpen(true)}
-              className="rounded-full bg-card/70 backdrop-blur-xl border border-white/[0.06] shadow-[0_8px_32px_oklch(0_0_0/0.4)] h-10 w-10"
-            >
-              <CodeXml className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">Embed</TooltipContent>
-        </Tooltip>
+      {/* Top Navigation Dock */}
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        className={`pointer-events-auto absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 p-1.5 rounded-full bg-black/40 backdrop-blur-3xl border border-white/10 shadow-[0_12px_40px_oklch(0_0_0/0.6)] ${topPanel === "settings" ? "z-20" : "z-[8]"}`}
+      >
+        {/* Input tab icons — Draw, Text, Code, File */}
+        {([
+          { value: "draw", icon: Pencil, label: "Draw" },
+          { value: "text", icon: Type,   label: "Text" },
+          { value: "code", icon: Code,   label: "SVG Code" },
+          { value: "file", icon: FileUp, label: "Upload File" },
+        ] as const).map(({ value, icon: Icon, label }) => {
+          const isActive = inputTab === value && inputPanelOpen;
+          return (
+            <Tooltip key={value}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    if (inputTab === value && inputPanelOpen) {
+                      setInputPanelOpen(false);
+                    } else {
+                      setInputTab(value);
+                      setInputPanelOpen(true);
+                      setTopPanel("toolbar");
+                      setControlsOpen(false);
+                    }
+                  }}
+                  className={`rounded-full h-10 w-10 transition-all duration-300 relative overflow-hidden ${
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-[0_0_20px_oklch(0.72_0.22_38/0.5)] border border-primary/50"
+                      : "text-muted-foreground hover:bg-white/5 hover:text-white border border-transparent"
+                  }`}
+                >
+                  {isActive && <div className="absolute inset-0 bg-white/20 blur-md pointer-events-none" />}
+                  <Icon className="h-[18px] w-[18px] relative z-10" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" sideOffset={12} className="bg-black/80 backdrop-blur border-white/10 text-white rounded-lg px-3 py-1.5 text-xs shadow-xl">{label}</TooltipContent>
+            </Tooltip>
+          );
+        })}
+
+        <div className="w-[1px] h-6 bg-white/10 mx-1" />
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => { setControlsOpen((v) => !v); setTopPanel("settings"); }}
-              className={`rounded-full bg-card/70 backdrop-blur-xl border border-white/[0.06] shadow-[0_8px_32px_oklch(0_0_0/0.4)] h-10 w-10 ${
-                controlsOpen ? "text-primary" : ""
+              className={`rounded-full h-10 w-10 transition-all duration-300 relative overflow-hidden ${
+                controlsOpen
+                  ? "bg-primary text-primary-foreground shadow-[0_0_20px_oklch(0.72_0.22_38/0.5)] border border-primary/50"
+                  : "hover:bg-white/10 text-white border border-transparent"
               }`}
             >
-              <Settings2 className="h-4 w-4" />
+              {controlsOpen && <div className="absolute inset-0 bg-white/20 blur-sm" />}
+              <Settings2 className="h-[18px] w-[18px] relative z-10" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Settings</TooltipContent>
+          <TooltipContent side="bottom" sideOffset={12} className="bg-black/80 backdrop-blur border-white/10 text-white rounded-lg px-3 py-1.5 text-xs shadow-xl">Settings</TooltipContent>
         </Tooltip>
-      </div>
+      </motion.div>
+
+      {/* Mobile backdrop — tap to close settings */}
+      {controlsOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-[19] bg-black/30 backdrop-blur-sm"
+          onClick={() => setControlsOpen(false)}
+        />
+      )}
 
       {/* Right-side settings panel */}
       <motion.div
-        initial={{ opacity: 0, x: 20, pointerEvents: "none" as const }}
+        initial={{ opacity: 0, x: 20, pointerEvents: "none" as const, scale: 0.95 }}
         animate={controlsOpen
-          ? { opacity: 1, x: 0, pointerEvents: "auto" as const }
-          : { opacity: 0, x: 20, pointerEvents: "none" as const }
+          ? { opacity: 1, x: 0, pointerEvents: "auto" as const, scale: 1 }
+          : { opacity: 0, x: 20, pointerEvents: "none" as const, scale: 0.95 }
         }
-        transition={{ duration: 0.2 }}
-        className={`absolute top-5 right-5 bottom-5 max-md:left-5 ${topPanel === "settings" ? "z-20" : "z-[8]"}`}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className={`absolute top-24 right-6 bottom-6 max-md:left-6 max-md:top-24 max-md:bottom-32 ${topPanel === "settings" ? "z-20" : "z-[8]"}`}
       >
             <ControlsPanel
               depth={depth}
@@ -376,50 +400,6 @@ export default function Home() {
         </motion.div>
       )}
 
-      {/* Feedback widget */}
-      <Freedback storage="email" open={feedbackOpen} onOpenChange={setFeedbackOpen} hideButton />
-
-      {/* Embed dialog */}
-      <EmbedDialog
-        open={embedOpen}
-        onOpenChange={setEmbedOpen}
-        inputTab={inputTab}
-        text={currentText}
-        font={currentFont}
-        activeSvg={activeSvg}
-        depth={depth}
-        smoothness={smoothness}
-        color={color}
-        materialSettings={materialSettings}
-        textureUrl={textureUrl}
-        textureSettings={textureSettings}
-        animate={animate}
-        animateSpeed={animateSpeed}
-        animateReverse={animateReverse}
-        rotationX={rotationX}
-        rotationY={rotationY}
-        zoom={zoom}
-        cursorOrbit={cursorOrbit}
-        orbitStrength={orbitStrength}
-        resetOnIdle={resetOnIdle}
-        resetDelay={resetDelay}
-        lightSettings={lightSettings}
-      />
-
-      {/* Docs badge */}
-      <Button
-        asChild
-        variant="secondary"
-        size="sm"
-        className="fixed bottom-4 right-4 z-10 hidden md:inline-flex rounded-full bg-neutral-900 text-white hover:bg-neutral-800 shadow-md hover:shadow-lg h-8 px-3.5 text-xs font-semibold gap-1"
-      >
-        <a href="https://www.npmjs.com/package/3dsvg" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 2500 2500" className="h-4 w-4 fill-current">
-            <path d="M1241.5 268.5h-973v1962.9h972.9V763.5h495v1467.9h495V268.5z" />
-          </svg>
-          3dsvg
-        </a>
-      </Button>
 
       {/* Export modal */}
       <ExportModal

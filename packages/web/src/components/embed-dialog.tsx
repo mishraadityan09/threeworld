@@ -214,17 +214,7 @@ export function EmbedDialog(props: EmbedDialogProps) {
         </DialogHeader>
 
         <div className="mt-1">
-          <Step number={1} title="Install the package">
-            <CodeBlock
-              code="npm install 3dsvg"
-              label="Terminal"
-              onCopy={() => handleCopy("npm install 3dsvg", "npm")}
-              copied={copied === "npm"}
-              lineNumbers={false}
-            />
-          </Step>
-
-          <Step number={2} title={isTextMode ? "Add the component to your project" : "Copy and paste into your component"}>
+          <Step number={1} title={isTextMode ? "Add the component to your project" : "Copy and paste into your component"}>
             <CodeBlock
               code={fullSnippet}
               label="your-component.tsx"
@@ -232,7 +222,6 @@ export function EmbedDialog(props: EmbedDialogProps) {
               copied={copied === "code"}
             />
           </Step>
-
         </div>
       </DialogContent>
     </Dialog>

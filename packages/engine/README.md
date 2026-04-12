@@ -1,12 +1,8 @@
-# 3dsvg
+# threeworld — 3D SVG Engine
 
-![3dsvg](https://raw.githubusercontent.com/renatoworks/3dsvg/main/.github/assets/demo.png)
+Turn SVGs into interactive React 3D components.
 
-The easiest way to turn SVGs into interactive React 3D components.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/renatoworks/3dsvg/blob/main/LICENSE)
-[![npm](https://img.shields.io/npm/v/3dsvg)](https://www.npmjs.com/package/3dsvg)
-[![npm bundle size](https://img.shields.io/bundlephobia/minzip/3dsvg)](https://bundlephobia.com/package/3dsvg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## Install
 
@@ -45,7 +41,7 @@ const SVG3D = dynamic(
 
 ## Demo & Editor
 
-Design 3D objects visually and export embed code at [3dsvg.design](https://3dsvg.design).
+Design 3D objects visually and export embed code using the threeworld editor.
 
 ## Props
 
@@ -189,6 +185,4 @@ DM Sans · Bebas Neue · Playfair Display · Righteous · Black Ops One · Perma
 
 ## License
 
-MIT — [Renato Costa](https://renato.works)
-
-Made in [Blueberry](https://meetblueberry.com) 🫐
+MIT — Aditya Mishra

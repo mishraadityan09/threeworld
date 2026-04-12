@@ -1,11 +1,8 @@
-# 3dsvg
+# threeworld
 
-![3dsvg](.github/assets/demo.png)
-
-The easiest way to turn SVGs into interactive 3D.
+Turn SVGs into interactive 3D — visual editor + embeddable React component.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![npm](https://img.shields.io/npm/v/3dsvg)](https://www.npmjs.com/package/3dsvg)
 
 ## Overview
 
@@ -13,8 +10,8 @@ This is a monorepo with two packages:
 
 | Package | Description |
 |---------|-------------|
-| [`packages/engine`](packages/engine/) | Embeddable `<SVG3D>` React component — published to npm as [`3dsvg`](https://www.npmjs.com/package/3dsvg) |
-| [`packages/web`](packages/web/) | Visual editor at [3dsvg.design](https://3dsvg.design) — design 3D objects and export as images, video, or embed code |
+| [`packages/engine`](packages/engine/) | Embeddable `<SVG3D>` React component |
+| [`packages/web`](packages/web/) | Visual editor — design 3D objects and export as images, video, or 3D model |
 
 The web editor renders the engine's `<SVG3D>` component directly — what you see in the editor is exactly what you get with the embed.
 
@@ -94,7 +91,4 @@ See the full [engine docs](packages/engine/README.md) for all props.
 
 ## License
 
-MIT — [Renato Costa](https://renato.works)
-
-Made in [Blueberry](https://meetblueberry.com) 🫐
-# threeworld
+MIT — Aditya Mishra

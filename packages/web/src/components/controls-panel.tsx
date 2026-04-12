@@ -156,15 +156,15 @@ function Section({
   };
 
   return (
-    <div className="border-b border-white/[0.06]">
+    <div className="border-b border-white/5 last:border-0">
       <button
         onClick={toggle}
-        className={`flex w-full items-center gap-2 py-3 px-4 cursor-pointer transition-colors ${open ? "bg-white/[0.03]" : "hover:bg-white/[0.03]"}`}
+        className={`group flex w-full items-center gap-3 py-4 px-5 cursor-pointer transition-all duration-300 ${open ? "bg-white/[0.03]" : "hover:bg-white/[0.01]"}`}
       >
-        <Icon className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium flex-1 text-left">{title}</span>
+        <Icon className={`h-[18px] w-[18px] transition-colors duration-300 ${open ? "text-primary shadow-[0_0_10px_currentColor]" : "text-white/40 group-hover:text-white/70"}`} />
+        <span className={`text-[13px] font-semibold tracking-wider uppercase flex-1 text-left transition-colors duration-300 ${open ? "text-white" : "text-white/60 group-hover:text-white"}`}>{title}</span>
         <ChevronDown
-          className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+          className={`h-4 w-4 text-white/30 transition-transform duration-300 ${
             open ? "rotate-180" : ""
           }`}
         />
@@ -232,7 +232,7 @@ function CommitNumberInput({
       min={min}
       max={max}
       step={step}
-      className={className ?? "w-16 h-7 rounded-md border border-input bg-background/50 px-2 text-xs font-mono text-center"}
+      className={className ?? "w-16 h-7 rounded-lg border border-white/10 bg-black/40 shadow-inner px-2 text-xs font-mono text-center text-white/90 focus:outline-none focus:border-primary/50"}
     />
   );
 }
@@ -301,11 +301,12 @@ export function ControlsPanel({
   };
 
   return (
-    <div className="w-72 max-md:w-full rounded-xl bg-card/70 backdrop-blur-xl border border-white/[0.06] shadow-[0_8px_32px_oklch(0_0_0/0.4)] h-full flex flex-col overflow-hidden">
+    <div className="w-[340px] max-md:w-full rounded-[2rem] bg-black/40 backdrop-blur-3xl border border-white/10 shadow-[0_12px_44px_oklch(0_0_0/0.5)] h-full flex flex-col overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none" />
       {/* Header -- fixed at top */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] shrink-0">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Settings</span>
-        <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0 bg-black/20 relative z-10">
+        <span className="text-[13px] font-bold text-white/90 uppercase tracking-widest">Settings</span>
+        <button onClick={onClose} className="rounded-full p-1.5 hover:bg-white/10 text-white/50 hover:text-white transition-colors">
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -408,8 +409,8 @@ export function ControlsPanel({
                 transparent: p.transparent,
               });
             }}
-            className="w-full h-8 rounded-md border border-input bg-background/30 px-3 pr-8 text-xs ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring appearance-none bg-no-repeat bg-[right_8px_center] bg-[length:12px]"
-            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")` }}
+            className="w-full h-10 rounded-xl border border-white/10 bg-black/40 backdrop-blur shadow-inner px-3 pr-8 text-[13px] text-white/90 ring-offset-background focus:outline-none focus:ring-1 focus:ring-primary/50 appearance-none bg-no-repeat bg-[right_12px_center] bg-[length:12px]"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, strokeOpacity: 0.4 }}
           >
             {(Object.keys(materialPresets) as MaterialPreset[]).map((key) => (
               <option key={key} value={key}>
@@ -508,8 +509,8 @@ export function ControlsPanel({
           <select
             value={animate}
             onChange={(e) => onAnimateChange(e.target.value as AnimationType)}
-            className="w-full h-8 rounded-md border border-input bg-background/30 px-3 pr-8 text-xs ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring appearance-none bg-no-repeat bg-[right_8px_center] bg-[length:12px]"
-            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")` }}
+            className="w-full h-10 rounded-xl border border-white/10 bg-black/40 backdrop-blur shadow-inner px-3 pr-8 text-[13px] text-white/90 ring-offset-background focus:outline-none focus:ring-1 focus:ring-primary/50 appearance-none bg-no-repeat bg-[right_12px_center] bg-[length:12px]"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, strokeOpacity: 0.4 }}
           >
             {ANIMATION_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -662,7 +663,7 @@ function TexturePresetPicker({
                     onSelect(previewUrl);
                   }
                 }}
-                className={`h-10 w-10 rounded-full overflow-hidden border border-white/10 transition-all hover:scale-110 ${isActive ? "ring-2 ring-primary" : ""} ${!previewUrl ? "bg-muted animate-pulse" : ""}`}
+                className={`h-11 w-11 rounded-full overflow-hidden border border-white/10 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] ${isActive ? "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_20px_oklch(0.72_0.18_250/0.4)]" : ""} ${!previewUrl ? "bg-black/50 animate-pulse" : ""}`}
               >
                 {previewUrl && <img src={previewUrl} alt={preset.name} className="h-full w-full object-cover" />}
               </button>

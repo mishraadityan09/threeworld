@@ -141,18 +141,18 @@ function ShutterButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="relative h-16 w-16 rounded-full flex items-center justify-center shrink-0 cursor-pointer disabled:opacity-40"
+      className="relative h-[4.5rem] w-[4.5rem] rounded-full flex items-center justify-center shrink-0 cursor-pointer disabled:opacity-40 hover:scale-105 transition-transform duration-300"
     >
       {/* Outer ring */}
       <div
-        className={`absolute inset-0 rounded-full border-[3px] transition-colors duration-300 ${
-          isVideo ? "border-red-500" : isModel ? "border-emerald-400" : "border-white"
+        className={`absolute inset-0 rounded-full border-[3px] transition-colors duration-500  ${
+          isVideo ? "border-red-500/80 hover:border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]" : isModel ? "border-primary/80 hover:border-primary shadow-[0_0_15px_oklch(0.72_0.18_250/0.4)]" : "border-white/80 hover:border-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
         }`}
       />
       {/* Inner fill */}
       <div
-        className={`h-12 w-12 rounded-full transition-all duration-300 active:scale-90 ${
-          isVideo ? "bg-red-500" : isModel ? "bg-emerald-400" : "bg-white"
+        className={`h-14 w-14 rounded-full transition-all duration-300 active:scale-90 ${
+          isVideo ? "bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)]" : isModel ? "bg-primary shadow-[0_0_20px_oklch(0.72_0.18_250/0.5)]" : "bg-white shadow-[0_0_20px_rgba(255,255,255,0.5)]"
         }`}
       />
     </button>
@@ -543,10 +543,11 @@ export function ExportModal({
       <>
         {aspectRatioValue && <ViewfinderOverlay aspectRatio={aspectRatioValue} />}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-full bg-black/70 backdrop-blur-2xl border border-white/[0.1] shadow-[0_8px_32px_oklch(0_0_0/0.5)] px-5 py-2.5"
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.95 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 rounded-full bg-black/60 backdrop-blur-3xl border border-white/10 shadow-[0_12px_44px_oklch(0_0_0/0.6)] px-6 py-3"
         >
           <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
           <span className="text-sm font-mono text-white tabular-nums">
@@ -796,8 +797,8 @@ export function ExportModal({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.2, ease: "easeInOut" }}
-                  className="flex gap-1 rounded-full bg-black/40 backdrop-blur-xl border border-white/[0.12] p-1"
+                  transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                  className="flex gap-1.5 rounded-[1.5rem] bg-black/60 backdrop-blur-3xl border border-white/10 p-1.5 shadow-xl"
                 >
                   {[1, 2, 3].map((n) => (
                     <Tooltip key={n}>
@@ -824,10 +825,10 @@ export function ExportModal({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                   className="flex flex-col items-center gap-2"
                 >
-                  <div className="flex gap-1 rounded-full bg-black/40 backdrop-blur-xl border border-white/[0.12] p-1">
+                  <div className="flex gap-1.5 rounded-[1.5rem] bg-black/60 backdrop-blur-3xl border border-white/10 p-1.5 shadow-xl">
                     {modelFormatOptions.map((opt) => (
                       <Tooltip key={opt.value}>
                         <TooltipTrigger asChild>
@@ -876,7 +877,7 @@ export function ExportModal({
             </div>
 
             {/* Mode toggle + settings */}
-            <div className="flex items-center gap-1 rounded-full bg-black/40 backdrop-blur-xl border border-white/[0.12] p-1">
+            <div className="flex items-center gap-1.5 rounded-[2rem] bg-black/60 backdrop-blur-3xl border border-white/10 p-2 shadow-[0_12px_44px_oklch(0_0_0/0.5)]">
               <button
                 className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium transition-all cursor-pointer ${
                   tab === "image"

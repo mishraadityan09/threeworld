@@ -223,30 +223,32 @@ export function PixelEditor({ onSvgChange }: PixelEditorProps) {
   return (
     <div className="space-y-3">
       {/* Toolbar */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
         <Button
-          variant={tool === "draw" ? "default" : "outline"}
+          variant={tool === "draw" ? "default" : "ghost"}
           size="sm"
           onClick={() => setTool("draw")}
-          className="h-7 w-7 p-0"
+          className={`h-9 px-4 gap-1.5 rounded-xl text-xs font-medium ${tool === "draw" ? "" : "text-white/60 border border-white/10 hover:bg-white/5 hover:text-white"}`}
           title="Draw"
         >
           <Paintbrush className="h-3.5 w-3.5" />
+          Draw
         </Button>
         <Button
-          variant={tool === "erase" ? "default" : "outline"}
+          variant={tool === "erase" ? "default" : "ghost"}
           size="sm"
           onClick={() => setTool("erase")}
-          className="h-7 w-7 p-0"
+          className={`h-9 px-4 gap-1.5 rounded-xl text-xs font-medium ${tool === "erase" ? "" : "text-white/60 border border-white/10 hover:bg-white/5 hover:text-white"}`}
           title="Erase"
         >
           <Eraser className="h-3.5 w-3.5" />
+          Erase
         </Button>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={clearGrid}
-          className="h-7 w-7 p-0"
+          className="h-9 w-9 p-0 ml-auto rounded-xl text-white/40 border border-white/10 hover:bg-white/5 hover:text-white"
           title="Clear"
         >
           <RotateCcw className="h-3.5 w-3.5" />
@@ -256,7 +258,7 @@ export function PixelEditor({ onSvgChange }: PixelEditorProps) {
       {/* Pixel grid */}
       <div
         ref={containerRef}
-        className="w-full border rounded-md bg-white overflow-hidden select-none touch-none"
+        className="w-full rounded-2xl border border-white/10 bg-white overflow-hidden select-none touch-none shadow-inner"
         style={{ aspectRatio: "1" }}
       >
         {cellPx > 0 && (

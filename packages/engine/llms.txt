@@ -1,10 +1,8 @@
-# 3dsvg
+# threeworld — 3dsvg engine
 
 Embeddable React component that turns SVGs and text into interactive 3D objects with PBR materials, textures, animations, and shadows.
 
-npm: https://www.npmjs.com/package/3dsvg
-Visual editor: https://3dsvg.design
-GitHub: https://github.com/renatoworks/3dsvg
+GitHub: https://github.com/mishraadityan09/threeworld
 
 ## Install
 

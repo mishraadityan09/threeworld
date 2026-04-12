@@ -1,17 +1,15 @@
-# 3dsvg
+# threeworld
 
 Monorepo containing an embeddable React 3D component and a visual web editor.
 
-Live editor: https://3dsvg.design
-npm package: https://www.npmjs.com/package/3dsvg
-GitHub: https://github.com/renatoworks/3dsvg
+GitHub: https://github.com/mishraadityan09/threeworld
 
 ## Architecture
 
 This is an npm workspaces monorepo with two packages:
 
 - packages/engine — The `<SVG3D>` React component, published to npm as "3dsvg". Renders extruded 3D objects from SVGs or text with PBR materials, textures, animations, configurable lighting, and shadows.
-- packages/web — Next.js visual editor at 3dsvg.design. Renders the engine's `<SVG3D>` component directly — what users see in the editor is exactly what they get with the embed. Adds export (PNG up to 4K, video MP4/WebM), draggable light controls, and a background plane.
+- packages/web — Next.js visual editor (threeworld). Renders the engine's `<SVG3D>` component directly — what users see in the editor is exactly what they get with the embed. Adds export (PNG up to 4K, video MP4/WebM), draggable light controls, and a background plane.
 
 ## Install (embed)
 
