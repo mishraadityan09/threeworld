@@ -14,8 +14,8 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
-import { SVG3D, materialPresets } from "3dsvg";
-import type { AnimationType, MaterialSettings } from "3dsvg";
+import { SVG3D } from "3dsvg";
+import type { AnimationType, MaterialSettings, QualityProfile } from "3dsvg";
 
 import { type TextureSettings } from "@/lib/types";
 
@@ -267,19 +267,52 @@ export interface LightSettings {
   shadowEnabled: boolean;
 }
 
+export const lightingPresets = {
+  studio: {
+    label: "Studio",
+    settings: {
+      keyX: 2,
+      keyY: 2,
+      keyZ: 4,
+      keyIntensity: 3.0,
+      ambientIntensity: 0.8,
+      shadowEnabled: true,
+    } satisfies LightSettings,
+  },
+  rim: {
+    label: "Rim",
+    settings: {
+      keyX: -4,
+      keyY: 1.5,
+      keyZ: 5,
+      keyIntensity: 2.6,
+      ambientIntensity: 0.55,
+      shadowEnabled: true,
+    } satisfies LightSettings,
+  },
+  sunset: {
+    label: "Sunset",
+    settings: {
+      keyX: 4.5,
+      keyY: 3.5,
+      keyZ: 2.5,
+      keyIntensity: 3.4,
+      ambientIntensity: 0.65,
+      shadowEnabled: true,
+    } satisfies LightSettings,
+  },
+} as const;
+
 export const defaultLightSettings: LightSettings = {
-  keyX: 2,
-  keyY: 2,
-  keyZ: 4,
-  keyIntensity: 3.0,
-  ambientIntensity: 0.8,
-  shadowEnabled: true,
+  ...lightingPresets.studio.settings,
 };
 
 interface SVGTo3DCanvasProps {
   svg: string;
   depth: number;
   smoothness: number;
+  qualityProfile: QualityProfile;
+  antiFlicker: boolean;
   color: string;
   preserveSvgColors: boolean;
   bgColor: string;
@@ -308,6 +341,8 @@ export function SVGTo3DCanvas({
   svg,
   depth,
   smoothness,
+  qualityProfile,
+  antiFlicker,
   color,
   preserveSvgColors,
   bgColor,
@@ -367,6 +402,8 @@ export function SVGTo3DCanvas({
       svg={svg}
       depth={depth}
       smoothness={smoothness}
+      qualityProfile={qualityProfile}
+      antiFlicker={antiFlicker}
       color={color}
       preserveSvgColors={preserveSvgColors}
       material={materialSettings.preset}

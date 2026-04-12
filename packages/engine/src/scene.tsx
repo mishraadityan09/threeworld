@@ -24,14 +24,12 @@ import * as THREE from "three";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { type MaterialSettings, materialPresets } from "./materials";
-import { type MaterialPreset } from "./types";
+import { type QualityProfile } from "./types";
 import {
   SmoothControls,
   IntroAnimation,
   LoopAnimation,
   introComplete,
-  type SmoothControlsProps,
-  type IntroAnimationProps,
   type AnimationType,
 } from "./controls";
 
@@ -46,6 +44,8 @@ export interface ExtrudedSVGProps {
   svgString: string;
   depth: number;
   smoothness: number;
+  qualityProfile: QualityProfile;
+  antiFlicker: boolean;
   color: string;
   preserveSvgColors: boolean;
   materialSettings: MaterialSettings;
@@ -104,6 +104,7 @@ export interface ExtrudedGeometryResult {
   }[];
   center: THREE.Vector3;
   baseScale: number;
+  boundsRadius: number;
 }
 
 function createEmptyResult(): ExtrudedGeometryResult {
@@ -111,6 +112,7 @@ function createEmptyResult(): ExtrudedGeometryResult {
     parts: [],
     center: new THREE.Vector3(),
     baseScale: 1,
+    boundsRadius: 0,
   };
 }
 
@@ -259,10 +261,22 @@ interface BuildExtrudedGeometryOptions {
   svgString: string;
   depth: number;
   smoothness: number;
+  qualityProfile: QualityProfile;
   preserveSvgColors: boolean;
   profile?: GeometryBuildProfile;
   onProgress?: (progress: number) => void;
   shouldCancel?: () => boolean;
+}
+
+function getQualityMultiplier(qualityProfile: QualityProfile) {
+  switch (qualityProfile) {
+    case "draft":
+      return 0.72;
+    case "high":
+      return 1.18;
+    default:
+      return 1;
+  }
 }
 
 function getExtrudeSettings(
@@ -270,36 +284,64 @@ function getExtrudeSettings(
   depth: number,
   smoothness: number,
   complexity: number,
-  profile: GeometryBuildProfile
+  profile: GeometryBuildProfile,
+  qualityProfile: QualityProfile
 ) {
   const scaledDepth = (depth / 10) * maxFlatDim;
   const bevelScale = Math.min(maxFlatDim * 0.02, 1);
+  const qualityScale = getQualityMultiplier(qualityProfile);
+  const complexityScale =
+    complexity > 240 ? 0.38 :
+    complexity > 140 ? 0.56 :
+    complexity > 70 ? 0.78 :
+    1;
+  const thinGeometry = depth <= 1 || smoothness < 0.14;
+  const denseGeometry = complexity > 150;
+  const allowBevel = !thinGeometry && !(qualityProfile === "draft" && denseGeometry);
 
   if (profile === "export") {
-    const qualityScale = complexity > 200 ? 0.65 : complexity > 50 ? 0.85 : 1;
-    const bevelSegments = clamp(Math.round((2 + smoothness * 4) * qualityScale), 2, 5);
-    const curveSegments = clamp(Math.round((18 + smoothness * 18) * qualityScale), 18, 36);
-    const bevelAmount = bevelScale * (0.12 + smoothness * 0.14);
+    const curveSegments = clamp(
+      Math.round((16 + smoothness * 18) * qualityScale * complexityScale),
+      qualityProfile === "draft" ? 8 : 12,
+      qualityProfile === "high" ? 34 : 28
+    );
+    const bevelSegments = allowBevel
+      ? clamp(
+          Math.round((1 + smoothness * 3.2) * qualityScale * Math.max(0.55, complexityScale)),
+          1,
+          qualityProfile === "high" ? 5 : 4
+        )
+      : 0;
+    const bevelAmount = bevelScale * (0.1 + smoothness * 0.12) * Math.min(1.1, qualityScale);
 
     return {
       depth: scaledDepth,
-      bevelEnabled: true,
-      bevelThickness: bevelAmount,
-      bevelSize: bevelAmount,
+      bevelEnabled: bevelSegments > 0,
+      bevelThickness: bevelSegments > 0 ? bevelAmount : 0,
+      bevelSize: bevelSegments > 0 ? bevelAmount : 0,
       bevelSegments,
       curveSegments,
       includeUvs: false,
     };
   }
 
-  const qualityScale = complexity > 200 ? 0.3 : complexity > 50 ? 0.6 : 1;
   return {
     depth: scaledDepth,
-    bevelEnabled: true,
-    bevelThickness: bevelScale * (0.15 + smoothness * 0.2),
-    bevelSize: bevelScale * (0.15 + smoothness * 0.2),
-    bevelSegments: Math.round((3 + smoothness * 20) * qualityScale),
-    curveSegments: Math.round((24 + smoothness * 176) * qualityScale),
+    bevelEnabled: allowBevel,
+    bevelThickness: allowBevel ? bevelScale * (0.11 + smoothness * 0.12) * Math.min(1.05, qualityScale) : 0,
+    bevelSize: allowBevel ? bevelScale * (0.11 + smoothness * 0.12) * Math.min(1.05, qualityScale) : 0,
+    bevelSegments: allowBevel
+      ? clamp(
+          Math.round((1 + smoothness * 5) * qualityScale * Math.max(0.55, complexityScale)),
+          1,
+          qualityProfile === "high" ? 5 : 3
+        )
+      : 0,
+    curveSegments: clamp(
+      Math.round((12 + smoothness * 22) * qualityScale * complexityScale),
+      qualityProfile === "draft" ? 8 : 10,
+      qualityProfile === "high" ? 30 : 24
+    ),
     includeUvs: true,
   };
 }
@@ -308,6 +350,7 @@ export async function buildExtrudedGeometryResult({
   svgString,
   depth,
   smoothness,
+  qualityProfile,
   preserveSvgColors,
   profile = "preview",
   onProgress,
@@ -329,7 +372,14 @@ export async function buildExtrudedGeometryResult({
   const maxFlatDim = Math.max(flatSize.x, flatSize.y, 1);
   tempGeo.dispose();
 
-  const extrudeSettings = getExtrudeSettings(maxFlatDim, depth, smoothness, allShapes.length, profile);
+  const extrudeSettings = getExtrudeSettings(
+    maxFlatDim,
+    depth,
+    smoothness,
+    allShapes.length,
+    profile,
+    qualityProfile
+  );
 
   const groupedGeometries = new Map<string, { color: string | null; geometries: THREE.ExtrudeGeometry[] }>();
   let processedShapes = 0;
@@ -380,14 +430,27 @@ export async function buildExtrudedGeometryResult({
     }
 
     merged.computeBoundingBox();
-    merged.computeVertexNormals();
     if (extrudeSettings.includeUvs) {
       recomputeTriplanarUVs(merged, merged.boundingBox!);
     } else {
       merged.deleteAttribute("uv");
     }
 
-    mergedParts.push({ geometry: merged, color: entry.color });
+    const optimized =
+      profile === "export"
+        ? BufferGeometryUtils.mergeVertices(merged, qualityProfile === "draft" ? 1e-4 : 1e-5)
+        : merged;
+
+    if (optimized !== merged) {
+      merged.dispose();
+    }
+
+    optimized.computeBoundingBox();
+    optimized.computeVertexNormals();
+    optimized.computeBoundingSphere();
+    optimized.deleteAttribute("color");
+
+    mergedParts.push({ geometry: optimized, color: entry.color });
   }
 
   if (mergedParts.length === 0 || isCancelled()) {
@@ -410,6 +473,7 @@ export async function buildExtrudedGeometryResult({
   bb.getSize(size);
   const maxDim = Math.max(size.x, size.y, size.z);
   const baseScale = maxDim > 0 ? 4 / maxDim : 1;
+  const boundsRadius = size.length() * 0.5;
 
   if (isCancelled()) {
     mergedParts.forEach((part) => part.geometry.dispose());
@@ -417,7 +481,7 @@ export async function buildExtrudedGeometryResult({
   }
 
   reportProgress(100);
-  return { parts: mergedParts, center: ctr, baseScale };
+  return { parts: mergedParts, center: ctr, baseScale, boundsRadius };
 }
 
 interface MeshMaterialOptions {
@@ -425,6 +489,45 @@ interface MeshMaterialOptions {
   materialSettings: MaterialSettings;
   texture?: THREE.Texture | null;
   profile?: MaterialBuildProfile;
+  depthBias?: { factor: number; units: number } | null;
+}
+
+function isShimmerPronePreset(materialSettings: MaterialSettings) {
+  return (
+    materialSettings.transparent ||
+    materialSettings.opacity < 1 ||
+    materialSettings.metalness > 0.75 ||
+    materialSettings.preset === "glass" ||
+    materialSettings.preset === "holographic" ||
+    materialSettings.preset === "chrome"
+  );
+}
+
+function getStackWorldEpsilon(
+  layerCount: number,
+  materialSettings: MaterialSettings,
+  antiFlicker: boolean
+) {
+  const densityBoost = clamp(1 + layerCount / 90, 1, 2.4);
+  const materialBoost = isShimmerPronePreset(materialSettings) ? 1.6 : 1;
+  const base = antiFlicker ? 0.00135 : 0.001;
+  return clamp(base * densityBoost * materialBoost, 0.001, 0.006);
+}
+
+function getDepthBias(
+  layerIndex: number,
+  layerCount: number,
+  materialSettings: MaterialSettings,
+  antiFlicker: boolean
+) {
+  if (!antiFlicker || layerCount <= 1) return null;
+
+  const reflective = isShimmerPronePreset(materialSettings);
+  const progress = layerCount <= 1 ? 0 : layerIndex / (layerCount - 1);
+  return {
+    factor: reflective ? -1.25 : -0.65,
+    units: (reflective ? -1.5 : -0.75) - progress * (reflective ? 2.4 : 1.2),
+  };
 }
 
 function createMeshMaterial({
@@ -432,6 +535,7 @@ function createMeshMaterial({
   materialSettings,
   texture,
   profile = "preview",
+  depthBias,
 }: MeshMaterialOptions) {
   const preset = materialPresets[materialSettings.preset];
   const isEmissive = materialSettings.preset === "emissive";
@@ -472,7 +576,12 @@ function createMeshMaterial({
     color,
     map: texture ?? undefined,
     metalness: materialSettings.metalness,
-    roughness: wantsTransparency ? Math.max(0.02, materialSettings.roughness * 0.3) : materialSettings.roughness,
+    roughness: wantsTransparency
+      ? Math.max(
+          materialSettings.preset === "glass" ? 0.08 : materialSettings.preset === "holographic" ? 0.12 : 0.05,
+          materialSettings.roughness * 0.45
+        )
+      : materialSettings.roughness,
     transmission: transmissionAmount,
     thickness: wantsTransparency ? 2.5 : 0,
     ior: wantsTransparency ? 1.5 : 1.45,
@@ -481,10 +590,13 @@ function createMeshMaterial({
     wireframe: materialSettings.wireframe,
     emissive: isEmissive ? color : "#000000",
     emissiveIntensity: preset.emissiveIntensity ?? 0,
-    clearcoat: wantsTransparency ? 1 : (preset.clearcoat ?? 0),
-    clearcoatRoughness: 0.05,
+    clearcoat: wantsTransparency ? (materialSettings.preset === "holographic" ? 0.7 : 0.5) : (preset.clearcoat ?? 0),
+    clearcoatRoughness: wantsTransparency ? 0.14 : 0.05,
     side: THREE.FrontSide,
-    envMapIntensity: 1,
+    envMapIntensity: wantsTransparency ? 0.82 : materialSettings.preset === "chrome" ? 0.95 : 1,
+    polygonOffset: !!depthBias,
+    polygonOffsetFactor: depthBias?.factor ?? 0,
+    polygonOffsetUnits: depthBias?.units ?? 0,
   });
 }
 
@@ -496,6 +608,7 @@ interface MeshGroupOptions {
   rotationY: number;
   texture?: THREE.Texture | null;
   materialProfile?: MaterialBuildProfile;
+  antiFlicker?: boolean;
 }
 
 function createMeshGroup({
@@ -506,6 +619,7 @@ function createMeshGroup({
   rotationY,
   texture,
   materialProfile = "preview",
+  antiFlicker = true,
 }: MeshGroupOptions) {
   const group = new THREE.Group();
   group.rotation.set(rotationX, rotationY, 0);
@@ -515,7 +629,7 @@ function createMeshGroup({
   // slightly in front of earlier ones, matching the SVG painter's algorithm and
   // preventing Z-fighting between overlapping extruded shapes (e.g. a white
   // detail icon inside a filled circle).
-  const STACK_Z_WORLD = 0.002;
+  const STACK_Z_WORLD = getStackWorldEpsilon(result.parts.length, materialSettings, antiFlicker);
   const stackEpsilon = result.baseScale > 0 ? STACK_Z_WORLD / result.baseScale : 0;
 
   const fallbackColor = materialSettings.preset === "gold" ? "#d4a017" : color;
@@ -526,6 +640,9 @@ function createMeshGroup({
       materialSettings,
       texture,
       profile: materialProfile,
+      depthBias: materialProfile === "preview"
+        ? getDepthBias(index, result.parts.length, materialSettings, antiFlicker)
+        : null,
     }));
     mesh.position.set(-result.center.x, -result.center.y, -result.center.z + index * stackEpsilon);
     group.add(mesh);
@@ -538,6 +655,8 @@ export interface OptimizedExportMeshOptions {
   svgString: string;
   depth: number;
   smoothness: number;
+  qualityProfile?: QualityProfile;
+  antiFlicker?: boolean;
   color: string;
   preserveSvgColors: boolean;
   materialSettings: MaterialSettings;
@@ -551,6 +670,7 @@ export async function buildOptimizedExportMeshGroup(options: OptimizedExportMesh
     svgString: options.svgString,
     depth: options.depth,
     smoothness: options.smoothness,
+    qualityProfile: options.qualityProfile ?? "standard",
     preserveSvgColors: options.preserveSvgColors,
     profile: "export",
     onProgress: options.onProgress,
@@ -563,6 +683,7 @@ export async function buildOptimizedExportMeshGroup(options: OptimizedExportMesh
     rotationX: options.rotationX,
     rotationY: options.rotationY,
     materialProfile: "export",
+    antiFlicker: options.antiFlicker ?? true,
   });
 }
 
@@ -570,6 +691,7 @@ export function useExtrudedGeometry(
   svgString: string,
   depth: number,
   smoothness: number,
+  qualityProfile: QualityProfile,
   preserveSvgColors: boolean
 ): ExtrudedGeometryResult & { loading: boolean; progress: number; cancel: () => void } {
   const [result, setResult] = useState<ExtrudedGeometryResult>(EMPTY_RESULT);
@@ -606,6 +728,7 @@ export function useExtrudedGeometry(
         svgString,
         depth,
         smoothness,
+        qualityProfile,
         preserveSvgColors,
         profile: "preview",
         onProgress: setProgress,
@@ -623,7 +746,7 @@ export function useExtrudedGeometry(
     })();
 
     return () => { cancelRef.current = true; };
-  }, [svgString, depth, smoothness, preserveSvgColors]);
+  }, [svgString, depth, smoothness, qualityProfile, preserveSvgColors]);
 
   return { ...result, loading, progress, cancel };
 }
@@ -632,6 +755,8 @@ export function ExtrudedSVG({
   svgString,
   depth,
   smoothness,
+  qualityProfile,
+  antiFlicker,
   color,
   preserveSvgColors,
   materialSettings,
@@ -649,18 +774,38 @@ export function ExtrudedSVG({
 
   useEffect(() => {
     if (!textureUrl) {
-      setTexture(null);
+      setTexture((prev) => {
+        prev?.dispose();
+        return null;
+      });
       return;
     }
+    let disposed = false;
     const loader = new THREE.TextureLoader();
     loader.load(textureUrl, (tex) => {
+      if (disposed) {
+        tex.dispose();
+        return;
+      }
       tex.wrapS = THREE.RepeatWrapping;
       tex.wrapT = THREE.RepeatWrapping;
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.needsUpdate = true;
-      setTexture(tex);
+      setTexture((prev) => {
+        if (prev && prev !== tex) prev.dispose();
+        return tex;
+      });
     });
+    return () => {
+      disposed = true;
+    };
   }, [textureUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (texture) texture.dispose();
+    };
+  }, [texture]);
 
   useEffect(() => {
     if (!texture) return;
@@ -675,13 +820,14 @@ export function ExtrudedSVG({
     svgString,
     depth,
     smoothness,
+    qualityProfile,
     preserveSvgColors
   );
 
   // Match SVG painter's algorithm: later paths sit slightly in front of earlier ones.
   // Prevents Z-fighting when overlapping shapes (e.g. detail icon inside a circle)
   // are extruded to the same depth.
-  const STACK_Z_WORLD = 0.002;
+  const STACK_Z_WORLD = getStackWorldEpsilon(parts.length, materialSettings, antiFlicker);
   const stackEpsilon = baseScale > 0 ? STACK_Z_WORLD / baseScale : 0;
 
   const onLoadingChangeRef = useRef(onLoadingChange);
@@ -723,7 +869,12 @@ export function ExtrudedSVG({
               color={baseColor}
               map={texture ?? undefined}
               metalness={materialSettings.metalness}
-              roughness={wantsTransparency ? Math.max(0.02, materialSettings.roughness * 0.3) : materialSettings.roughness}
+              roughness={wantsTransparency
+                ? Math.max(
+                    materialSettings.preset === "glass" ? 0.08 : materialSettings.preset === "holographic" ? 0.12 : 0.05,
+                    materialSettings.roughness * 0.45
+                  )
+                : materialSettings.roughness}
               transmission={transmissionAmount}
               thickness={wantsTransparency ? 2.5 : 0}
               ior={wantsTransparency ? 1.5 : 1.45}
@@ -732,10 +883,13 @@ export function ExtrudedSVG({
               wireframe={materialSettings.wireframe}
               emissive={emissiveColor}
               emissiveIntensity={emissiveIntensity}
-              clearcoat={wantsTransparency ? 1 : (preset.clearcoat ?? 0)}
-              clearcoatRoughness={0.05}
+              clearcoat={wantsTransparency ? (materialSettings.preset === "holographic" ? 0.7 : 0.5) : (preset.clearcoat ?? 0)}
+              clearcoatRoughness={wantsTransparency ? 0.14 : 0.05}
               side={THREE.FrontSide}
-              envMapIntensity={1}
+              envMapIntensity={wantsTransparency ? 0.82 : materialSettings.preset === "chrome" ? 0.95 : 1}
+              polygonOffset={antiFlicker && parts.length > 1}
+              polygonOffsetFactor={antiFlicker && parts.length > 1 ? getDepthBias(i, parts.length, materialSettings, antiFlicker)?.factor ?? 0 : 0}
+              polygonOffsetUnits={antiFlicker && parts.length > 1 ? getDepthBias(i, parts.length, materialSettings, antiFlicker)?.units ?? 0 : 0}
             />
           </mesh>
         );
@@ -765,6 +919,33 @@ function ReadyNotifier({ onReady }: { onReady?: () => void }) {
   return null;
 }
 
+function AutoCameraClipping({ targetRef }: { targetRef: React.RefObject<THREE.Object3D | null> }) {
+  const { camera } = useThree();
+  const scratchBox = useRef(new THREE.Box3());
+  const scratchSphere = useRef(new THREE.Sphere());
+
+  useFrame(() => {
+    if (!(camera instanceof THREE.PerspectiveCamera) || !targetRef.current) return;
+
+    scratchBox.current.setFromObject(targetRef.current);
+    if (scratchBox.current.isEmpty()) return;
+
+    scratchBox.current.getBoundingSphere(scratchSphere.current);
+    const distance = camera.position.distanceTo(scratchSphere.current.center);
+    const radius = Math.max(0.5, scratchSphere.current.radius);
+    const nextNear = Math.max(0.05, distance - radius * 2.5);
+    const nextFar = Math.max(nextNear + 10, distance + radius * 3.5);
+
+    if (Math.abs(camera.near - nextNear) > 0.01 || Math.abs(camera.far - nextFar) > 0.5) {
+      camera.near = nextNear;
+      camera.far = nextFar;
+      camera.updateProjectionMatrix();
+    }
+  });
+
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // SVG3DScene
 // ---------------------------------------------------------------------------
@@ -773,6 +954,8 @@ export interface SVG3DSceneProps {
   svgString: string;
   depth: number;
   smoothness: number;
+  qualityProfile: QualityProfile;
+  antiFlicker: boolean;
   color: string;
   preserveSvgColors: boolean;
   materialSettings: MaterialSettings;
@@ -815,6 +998,8 @@ export function SVG3DScene({
   svgString,
   depth,
   smoothness,
+  qualityProfile,
+  antiFlicker,
   color,
   preserveSvgColors,
   materialSettings,
@@ -861,7 +1046,7 @@ export function SVG3DScene({
 
   return (
     <Canvas
-      camera={{ position: [0, 0, zoom], fov }}
+      camera={{ position: [0, 0, zoom], fov, near: 0.05, far: 100 }}
       style={{ background, visibility: "hidden" }}
       gl={{
         antialias: true,
@@ -890,6 +1075,7 @@ export function SVG3DScene({
       }}
     >
       <ReadyNotifier onReady={onReady} />
+      <AutoCameraClipping targetRef={animGroupRef} />
 
       <IntroAnimation
         type={intro}
@@ -925,6 +1111,8 @@ export function SVG3DScene({
           svgString={svgString}
           depth={depth}
           smoothness={smoothness}
+          qualityProfile={qualityProfile}
+          antiFlicker={antiFlicker}
           color={color}
           preserveSvgColors={preserveSvgColors}
           materialSettings={materialSettings}

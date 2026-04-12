@@ -13,7 +13,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { track } from "@vercel/analytics";
 import type { Group } from "three";
-import type { MaterialSettings } from "@/lib/types";
+import type { MaterialSettings, QualityProfile } from "@/lib/types";
 import { Download, Square, Repeat, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,7 @@ interface ModelExportSource {
   svgString: string;
   depth: number;
   smoothness: number;
+  antiFlicker: boolean;
   color: string;
   preserveSvgColors: boolean;
   materialSettings: MaterialSettings;
@@ -241,6 +242,7 @@ export function ExportModal({
   const [videoFormat, setVideoFormat] = useState<"mp4" | "webm">("mp4");
   const [videoQuality, setVideoQuality] = useState<"low" | "mid" | "high">("high");
   const [modelFormat, setModelFormat] = useState<ModelFormat>("glb");
+  const [modelQuality, setModelQuality] = useState<QualityProfile>("standard");
   const [aspect, setAspect] = useState<string>("free");
   const [videoCycles, setVideoCycles] = useState<number | null>(null);
   const [aspectExpanded, setAspectExpanded] = useState(false);
@@ -378,19 +380,20 @@ export function ExportModal({
     if (!meshGroup) return;
 
     setIsExportingModel(true);
-    setModelStatus(modelFormat === "glb" ? "Optimizing mesh..." : `Preparing ${modelFormat.toUpperCase()}...`);
+    setModelStatus(`Optimizing ${modelQuality} mesh...`);
 
     try {
-      let blob: Blob;
-      if (modelFormat === "glb") {
-        const { buildOptimizedExportMeshGroup } = await import("3dsvg/scene");
-        const exportRoot = await buildOptimizedExportMeshGroup({
-          ...modelSource,
-          onProgress: (progress) => setModelStatus(`Optimizing mesh ${progress}%...`),
-        });
+      const { buildOptimizedExportMeshGroup } = await import("3dsvg/scene");
+      const exportRoot = await buildOptimizedExportMeshGroup({
+        ...modelSource,
+        qualityProfile: modelQuality,
+        onProgress: (progress) => setModelStatus(`Optimizing ${modelQuality} mesh ${progress}%...`),
+      });
 
-        try {
-          exportRoot.updateMatrixWorld(true);
+      let blob: Blob;
+      try {
+        exportRoot.updateMatrixWorld(true);
+        if (modelFormat === "glb") {
           setModelStatus("Encoding GLB...");
           const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
           const exporter = new GLTFExporter();
@@ -409,15 +412,16 @@ export function ExportModal({
             );
           });
           blob = new Blob([glb], { type: "model/gltf-binary" });
-        } finally {
-          disposeOwnedGroup(exportRoot);
+        } else {
+          setModelStatus(`Preparing ${modelFormat.toUpperCase()}...`);
+          blob = await exportMeshGroup(exportRoot, modelFormat);
         }
-      } else {
-        blob = await exportMeshGroup(meshGroup, modelFormat);
+      } finally {
+        disposeOwnedGroup(exportRoot);
       }
 
       downloadBlob(blob, `3dsvg-model.${modelFormat}`);
-      track("Model Download", { format: modelFormat });
+      track("Model Download", { format: modelFormat, quality: modelQuality });
       setModelStatus(`${modelFormat.toUpperCase()} downloaded`);
     } catch (error) {
       console.error("Model export failed:", error);
@@ -426,7 +430,7 @@ export function ExportModal({
       setTimeout(() => setModelStatus(""), 1800);
       setIsExportingModel(false);
     }
-  }, [meshGroupRef, modelFormat, modelSource]);
+  }, [meshGroupRef, modelFormat, modelQuality, modelSource]);
 
   const exportAbortRef = useRef(false);
 
@@ -535,6 +539,11 @@ export function ExportModal({
     { value: "glb", label: "GLB", description: "Best default, smoother and more stable while still optimized for size; preserves SVG colors and omits textures." },
     { value: "stl", label: "STL", description: "3D-printing friendly, but color is not preserved." },
     { value: "obj", label: "OBJ", description: "Wide compatibility, but exported here without material colors." },
+  ];
+  const modelQualityOptions: { value: QualityProfile; label: string; description: string }[] = [
+    { value: "draft", label: "Draft", description: "Smallest exports and fastest processing." },
+    { value: "standard", label: "Standard", description: "Best size-to-quality balance for most SVGs." },
+    { value: "high", label: "High", description: "Highest curve detail with larger exports." },
   ];
 
   // ── State 2: Recording pill ──
@@ -839,6 +848,25 @@ export function ExportModal({
                                 : "text-white/50 hover:text-white/80"
                             }`}
                             onClick={() => setModelFormat(opt.value)}
+                          >
+                            {opt.label}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">{opt.description}</TooltipContent>
+                      </Tooltip>
+                    ))}
+                  </div>
+                  <div className="flex gap-1.5 rounded-[1.5rem] bg-black/45 backdrop-blur-3xl border border-white/10 p-1.5 shadow-xl">
+                    {modelQualityOptions.map((opt) => (
+                      <Tooltip key={opt.value}>
+                        <TooltipTrigger asChild>
+                          <button
+                            className={`rounded-full px-3 py-1.5 text-[11px] font-medium transition-all cursor-pointer ${
+                              modelQuality === opt.value
+                                ? "bg-black/30 text-white shadow-sm"
+                                : "text-white/50 hover:text-white/80"
+                            }`}
+                            onClick={() => setModelQuality(opt.value)}
                           >
                             {opt.label}
                           </button>

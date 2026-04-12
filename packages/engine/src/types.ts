@@ -24,6 +24,8 @@ export type MaterialPreset =
   | "emissive"
   | "holographic";
 
+export type QualityProfile = "draft" | "standard" | "high";
+
 export interface SVG3DProps {
   // Content (one of these)
   text?: string;
@@ -35,6 +37,8 @@ export interface SVG3DProps {
   // Shape
   depth?: number; // default 1
   smoothness?: number; // default 0.2
+  qualityProfile?: QualityProfile; // geometry/detail quality preset. default "standard"
+  antiFlicker?: boolean; // adaptive depth bias + layer spacing for cleaner preview/export stability. default true
   color?: string; // default "#ffffff"
   preserveSvgColors?: boolean; // preserve original SVG fill/stroke colors when available. default false
 
@@ -107,6 +111,8 @@ export const defaultProps: Required<
     | "font"
     | "depth"
     | "smoothness"
+    | "qualityProfile"
+    | "antiFlicker"
     | "color"
     | "preserveSvgColors"
     | "material"
@@ -143,6 +149,8 @@ export const defaultProps: Required<
   font: "DM Sans",
   depth: 1,
   smoothness: 0.2,
+  qualityProfile: "standard",
+  antiFlicker: true,
   color: "#ffffff",
   preserveSvgColors: false,
   material: "default",

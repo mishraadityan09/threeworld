@@ -52,6 +52,8 @@ export function SVG3D(props: SVG3DProps) {
     svgString: svgStringProp,
     depth = defaultProps.depth,
     smoothness = defaultProps.smoothness,
+    qualityProfile = defaultProps.qualityProfile,
+    antiFlicker = defaultProps.antiFlicker,
     color = defaultProps.color,
     preserveSvgColors = defaultProps.preserveSvgColors,
     material = defaultProps.material,
@@ -147,6 +149,8 @@ export function SVG3D(props: SVG3DProps) {
           svgString={svgString}
           depth={depth}
           smoothness={smoothness}
+          qualityProfile={qualityProfile}
+          antiFlicker={antiFlicker}
           color={color}
           preserveSvgColors={preserveSvgColors}
           materialSettings={materialSettings}
@@ -191,7 +195,7 @@ export function SVG3D(props: SVG3DProps) {
 }
 
 // Types
-export type { SVG3DProps, MaterialPreset } from "./types";
+export type { SVG3DProps, MaterialPreset, QualityProfile } from "./types";
 export { defaultProps } from "./types";
 
 // Scene internals

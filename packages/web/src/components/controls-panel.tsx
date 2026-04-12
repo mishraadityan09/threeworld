@@ -27,6 +27,7 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 import {
+  type QualityProfile,
   type TextureSettings,
   type MaterialSettings,
   type MaterialPreset,
@@ -50,7 +51,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { type LightSettings } from "@/components/svg-to-3d-canvas";
+import { lightingPresets, type LightSettings } from "@/components/svg-to-3d-canvas";
 import type { AnimationType } from "3dsvg";
 
 interface ControlsPanelProps {
@@ -58,6 +59,10 @@ interface ControlsPanelProps {
   onDepthChange: (v: number) => void;
   smoothness: number;
   onSmoothnessChange: (v: number) => void;
+  qualityProfile: QualityProfile;
+  onQualityProfileChange: (v: QualityProfile) => void;
+  antiFlicker: boolean;
+  onAntiFlickerChange: (v: boolean) => void;
   color: string;
   onColorChange: (v: string) => void;
   bgColor: string;
@@ -130,6 +135,23 @@ const ANIMATION_OPTIONS: { value: AnimationType; label: string }[] = [
   { value: "swing", label: "Swing" },
   { value: "spinFloat", label: "Spin + Float" },
 ];
+
+const QUALITY_OPTIONS: { value: QualityProfile; label: string; description: string }[] = [
+  { value: "draft", label: "Draft", description: "Fastest preview with the lightest geometry." },
+  { value: "standard", label: "Standard", description: "Balanced detail, size, and stability." },
+  { value: "high", label: "High", description: "Highest curve detail with heavier geometry." },
+];
+
+function sameLightSettings(a: LightSettings, b: LightSettings) {
+  return (
+    a.keyX === b.keyX &&
+    a.keyY === b.keyY &&
+    a.keyZ === b.keyZ &&
+    a.keyIntensity === b.keyIntensity &&
+    a.ambientIntensity === b.ambientIntensity &&
+    a.shadowEnabled === b.shadowEnabled
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Collapsible Section component
@@ -246,6 +268,10 @@ export function ControlsPanel({
   onDepthChange,
   smoothness,
   onSmoothnessChange,
+  qualityProfile,
+  onQualityProfileChange,
+  antiFlicker,
+  onAntiFlickerChange,
   color,
   onColorChange,
   bgColor,
@@ -345,6 +371,34 @@ export function ControlsPanel({
             <span className="text-xs text-muted-foreground font-mono">{(smoothness * 100).toFixed(0)}%</span>
           </div>
           <Slider value={[smoothness]} onValueChange={([v]) => onSmoothnessChange(v)} min={0} max={1} step={0.05} />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between gap-3">
+            <Label className="text-xs font-medium text-muted-foreground">Geometry Quality</Label>
+            <span className="text-xs text-muted-foreground">{QUALITY_OPTIONS.find((opt) => opt.value === qualityProfile)?.label}</span>
+          </div>
+          <select
+            value={qualityProfile}
+            onChange={(e) => onQualityProfileChange(e.target.value as QualityProfile)}
+            className="w-full h-10 rounded-xl border border-white/10 bg-black/40 backdrop-blur shadow-inner px-3 pr-8 text-[13px] text-white/90 ring-offset-background focus:outline-none focus:ring-1 focus:ring-primary/50 appearance-none bg-no-repeat bg-[right_12px_center] bg-[length:12px]"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, strokeOpacity: 0.4 }}
+          >
+            {QUALITY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-[11px] text-white/45">{QUALITY_OPTIONS.find((opt) => opt.value === qualityProfile)?.description}</p>
+        </div>
+
+        <div className="flex items-center justify-between pt-1">
+          <div className="space-y-0.5">
+            <Label htmlFor="anti-flicker" className="text-xs cursor-pointer">Anti-flicker</Label>
+            <p className="text-[11px] text-white/40">Adaptive depth bias for stacked SVG layers.</p>
+          </div>
+          <Switch id="anti-flicker" checked={antiFlicker} onCheckedChange={onAntiFlickerChange} />
         </div>
 
         <div className="space-y-2">
@@ -572,6 +626,31 @@ export function ControlsPanel({
 
       {/* 8. Lighting */}
       <Section icon={Sun} title="Lighting" open={openSection === "lighting"} onToggle={() => toggleSection("lighting")} onOpenChange={onLightingSectionChange}>
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <Label className="text-xs font-medium text-muted-foreground">Preset</Label>
+            <span className="text-xs text-white/40">Stable highlight rigs</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.entries(lightingPresets).map(([key, preset]) => {
+              const isActive = sameLightSettings(lightSettings, preset.settings);
+              return (
+                <button
+                  key={key}
+                  onClick={() => onLightSettingsChange({ ...preset.settings })}
+                  className={`rounded-full px-3 py-1.5 text-[11px] font-medium transition-all ${
+                    isActive
+                      ? "bg-black/30 text-white shadow-sm"
+                      : "text-white/50 hover:text-white/80 border border-white/10"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="space-y-2">
           <div className="flex justify-between">
             <Label className="text-xs font-medium text-muted-foreground">Key Light X</Label>

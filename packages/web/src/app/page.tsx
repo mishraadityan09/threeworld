@@ -28,6 +28,7 @@ import { ExportModal } from "@/components/export-bar";
 import {
   defaultTextureSettings,
   defaultMaterialSettings,
+  type QualityProfile,
   type TextureSettings,
   type MaterialSettings,
 } from "@/lib/types";
@@ -52,6 +53,8 @@ export default function Home() {
   const [inputTab, setInputTab] = useState("draw");
   const [depth, setDepth] = useState(1);
   const [smoothness, setSmoothness] = useState(0.6);
+  const [qualityProfile, setQualityProfile] = useState<QualityProfile>("standard");
+  const [antiFlicker, setAntiFlicker] = useState(true);
   const [color, setColor] = useState("#4f46e5");
   const [bgColor, setBgColor] = useState("#000000");
   const [textureUrl, setTextureUrl] = useState<string | null>(null);
@@ -191,6 +194,8 @@ export default function Home() {
           svg={activeSvg}
           depth={depth}
           smoothness={smoothness}
+          qualityProfile={qualityProfile}
+          antiFlicker={antiFlicker}
           color={color}
           preserveSvgColors={preserveSvgColors}
           bgColor={bgColor}
@@ -346,6 +351,10 @@ export default function Home() {
               onDepthChange={setDepth}
               smoothness={smoothness}
               onSmoothnessChange={setSmoothness}
+              qualityProfile={qualityProfile}
+              onQualityProfileChange={setQualityProfile}
+              antiFlicker={antiFlicker}
+              onAntiFlickerChange={setAntiFlicker}
               color={color}
               onColorChange={setColor}
               bgColor={bgColor}
@@ -411,6 +420,7 @@ export default function Home() {
           svgString: activeSvg,
           depth,
           smoothness,
+          antiFlicker,
           color,
           preserveSvgColors,
           materialSettings,
