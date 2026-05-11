@@ -15,6 +15,8 @@ This is a monorepo with two packages:
 
 The web editor renders the engine's `<SVG3D>` component directly — what you see in the editor is exactly what you get with the embed.
 
+For the long-term geometry direction, see [docs/volume-mode-roadmap.md](docs/volume-mode-roadmap.md).
+
 ## Quick Start
 
 ```bash
@@ -88,6 +90,10 @@ See the full [engine docs](packages/engine/README.md) for all props.
 | [FFmpeg WASM](https://ffmpegwasm.netlify.app/) | Video conversion (web) |
 | [shadcn/ui](https://ui.shadcn.com/) | UI components (web) |
 | [Tailwind CSS v4](https://tailwindcss.com/) | Styling (web) |
+
+## Credits
+
+This project is based on [3dsvg](https://github.com/renatoworks/3dsvg) by [Renato Works](https://github.com/renatoworks). Significant features have been added on top of the original, including 3D model export, color retention, video quality controls, and image capture fixes.
 
 ## License
 
