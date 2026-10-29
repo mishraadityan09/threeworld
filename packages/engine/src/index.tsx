@@ -50,8 +50,14 @@ export function SVG3D(props: SVG3DProps) {
     font = defaultProps.font,
     svg: svgProp,
     svgString: svgStringProp,
+    mode = defaultProps.mode,
     depth = defaultProps.depth,
     smoothness = defaultProps.smoothness,
+    volumeInflate = defaultProps.volumeInflate,
+    volumeFrontRoundness = defaultProps.volumeFrontRoundness,
+    volumeBackRoundness = defaultProps.volumeBackRoundness,
+    volumeEdgeSoftness = defaultProps.volumeEdgeSoftness,
+    volumeDetailStrength = defaultProps.volumeDetailStrength,
     qualityProfile = defaultProps.qualityProfile,
     antiFlicker = defaultProps.antiFlicker,
     color = defaultProps.color,
@@ -147,8 +153,14 @@ export function SVG3D(props: SVG3DProps) {
       <Suspense fallback={loadingEl}>
         <SVG3DScene
           svgString={svgString}
+          mode={mode}
           depth={depth}
           smoothness={smoothness}
+          volumeInflate={volumeInflate}
+          volumeFrontRoundness={volumeFrontRoundness}
+          volumeBackRoundness={volumeBackRoundness}
+          volumeEdgeSoftness={volumeEdgeSoftness}
+          volumeDetailStrength={volumeDetailStrength}
           qualityProfile={qualityProfile}
           antiFlicker={antiFlicker}
           color={color}
@@ -195,7 +207,7 @@ export function SVG3D(props: SVG3DProps) {
 }
 
 // Types
-export type { SVG3DProps, MaterialPreset, QualityProfile } from "./types";
+export type { SVG3DProps, MaterialPreset, GeometryMode, QualityProfile } from "./types";
 export { defaultProps } from "./types";
 
 // Scene internals

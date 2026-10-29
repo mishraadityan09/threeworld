@@ -15,7 +15,7 @@ import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { SVG3D } from "3dsvg";
-import type { AnimationType, MaterialSettings, QualityProfile } from "3dsvg";
+import type { AnimationType, GeometryMode, MaterialSettings, QualityProfile } from "3dsvg";
 
 import { type TextureSettings } from "@/lib/types";
 
@@ -309,8 +309,14 @@ export const defaultLightSettings: LightSettings = {
 
 interface SVGTo3DCanvasProps {
   svg: string;
+  mode: GeometryMode;
   depth: number;
   smoothness: number;
+  volumeInflate: number;
+  volumeFrontRoundness: number;
+  volumeBackRoundness: number;
+  volumeEdgeSoftness: number;
+  volumeDetailStrength: number;
   qualityProfile: QualityProfile;
   antiFlicker: boolean;
   color: string;
@@ -339,8 +345,14 @@ interface SVGTo3DCanvasProps {
 
 export function SVGTo3DCanvas({
   svg,
+  mode,
   depth,
   smoothness,
+  volumeInflate,
+  volumeFrontRoundness,
+  volumeBackRoundness,
+  volumeEdgeSoftness,
+  volumeDetailStrength,
   qualityProfile,
   antiFlicker,
   color,
@@ -400,8 +412,14 @@ export function SVGTo3DCanvas({
       </div>
     <SVG3D
       svg={svg}
+      mode={mode}
       depth={depth}
       smoothness={smoothness}
+      volumeInflate={volumeInflate}
+      volumeFrontRoundness={volumeFrontRoundness}
+      volumeBackRoundness={volumeBackRoundness}
+      volumeEdgeSoftness={volumeEdgeSoftness}
+      volumeDetailStrength={volumeDetailStrength}
       qualityProfile={qualityProfile}
       antiFlicker={antiFlicker}
       color={color}

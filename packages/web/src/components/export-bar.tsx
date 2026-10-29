@@ -13,7 +13,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { track } from "@vercel/analytics";
 import type { Group } from "three";
-import type { MaterialSettings, QualityProfile } from "@/lib/types";
+import type { GeometryMode, MaterialSettings, QualityProfile } from "@/lib/types";
 import { Download, Square, Repeat, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -39,8 +39,14 @@ type ModelFormat = "glb" | "stl" | "obj";
 
 interface ModelExportSource {
   svgString: string;
+  mode: GeometryMode;
   depth: number;
   smoothness: number;
+  volumeInflate: number;
+  volumeFrontRoundness: number;
+  volumeBackRoundness: number;
+  volumeEdgeSoftness: number;
+  volumeDetailStrength: number;
   antiFlicker: boolean;
   color: string;
   preserveSvgColors: boolean;

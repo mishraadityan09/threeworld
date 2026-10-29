@@ -24,6 +24,7 @@ export type MaterialPreset =
   | "emissive"
   | "holographic";
 
+export type GeometryMode = "extrude" | "volume";
 export type QualityProfile = "draft" | "standard" | "high";
 
 export interface SVG3DProps {
@@ -35,8 +36,14 @@ export interface SVG3DProps {
   svgString?: string;
 
   // Shape
+  mode?: GeometryMode; // geometry generator mode. default "extrude"
   depth?: number; // default 1
   smoothness?: number; // default 0.2
+  volumeInflate?: number; // volume mode only. default 0.55
+  volumeFrontRoundness?: number; // volume mode only. default 0.65
+  volumeBackRoundness?: number; // volume mode only. default 0.45
+  volumeEdgeSoftness?: number; // volume mode only. default 0.6
+  volumeDetailStrength?: number; // volume mode only. default 0.5
   qualityProfile?: QualityProfile; // geometry/detail quality preset. default "standard"
   antiFlicker?: boolean; // adaptive depth bias + layer spacing for cleaner preview/export stability. default true
   color?: string; // default "#ffffff"
@@ -109,8 +116,14 @@ export const defaultProps: Required<
   Pick<
     SVG3DProps,
     | "font"
+    | "mode"
     | "depth"
     | "smoothness"
+    | "volumeInflate"
+    | "volumeFrontRoundness"
+    | "volumeBackRoundness"
+    | "volumeEdgeSoftness"
+    | "volumeDetailStrength"
     | "qualityProfile"
     | "antiFlicker"
     | "color"
@@ -147,8 +160,14 @@ export const defaultProps: Required<
   >
 > = {
   font: "DM Sans",
+  mode: "extrude",
   depth: 1,
   smoothness: 0.2,
+  volumeInflate: 0.55,
+  volumeFrontRoundness: 0.65,
+  volumeBackRoundness: 0.45,
+  volumeEdgeSoftness: 0.6,
+  volumeDetailStrength: 0.5,
   qualityProfile: "standard",
   antiFlicker: true,
   color: "#ffffff",
