@@ -27,6 +27,7 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 import {
+  type GeometryMode,
   type QualityProfile,
   type TextureSettings,
   type MaterialSettings,
@@ -55,10 +56,22 @@ import { lightingPresets, type LightSettings } from "@/components/svg-to-3d-canv
 import type { AnimationType } from "3dsvg";
 
 interface ControlsPanelProps {
+  mode: GeometryMode;
+  onModeChange: (v: GeometryMode) => void;
   depth: number;
   onDepthChange: (v: number) => void;
   smoothness: number;
   onSmoothnessChange: (v: number) => void;
+  volumeInflate: number;
+  onVolumeInflateChange: (v: number) => void;
+  volumeFrontRoundness: number;
+  onVolumeFrontRoundnessChange: (v: number) => void;
+  volumeBackRoundness: number;
+  onVolumeBackRoundnessChange: (v: number) => void;
+  volumeEdgeSoftness: number;
+  onVolumeEdgeSoftnessChange: (v: number) => void;
+  volumeDetailStrength: number;
+  onVolumeDetailStrengthChange: (v: number) => void;
   qualityProfile: QualityProfile;
   onQualityProfileChange: (v: QualityProfile) => void;
   antiFlicker: boolean;
@@ -134,6 +147,11 @@ const ANIMATION_OPTIONS: { value: AnimationType; label: string }[] = [
   { value: "wobble", label: "Wobble" },
   { value: "swing", label: "Swing" },
   { value: "spinFloat", label: "Spin + Float" },
+];
+
+const MODE_OPTIONS: { value: GeometryMode; label: string; description: string }[] = [
+  { value: "extrude", label: "Extrude", description: "Best for logos, letters, and flat graphic marks." },
+  { value: "volume", label: "Volume", description: "Soft solid form for icons, mascots, and filled illustrations." },
 ];
 
 const QUALITY_OPTIONS: { value: QualityProfile; label: string; description: string }[] = [
@@ -264,10 +282,22 @@ function CommitNumberInput({
 // ---------------------------------------------------------------------------
 
 export function ControlsPanel({
+  mode,
+  onModeChange,
   depth,
   onDepthChange,
   smoothness,
   onSmoothnessChange,
+  volumeInflate,
+  onVolumeInflateChange,
+  volumeFrontRoundness,
+  onVolumeFrontRoundnessChange,
+  volumeBackRoundness,
+  onVolumeBackRoundnessChange,
+  volumeEdgeSoftness,
+  onVolumeEdgeSoftnessChange,
+  volumeDetailStrength,
+  onVolumeDetailStrengthChange,
   qualityProfile,
   onQualityProfileChange,
   antiFlicker,
@@ -340,6 +370,34 @@ export function ControlsPanel({
       {/* 1. Object */}
       <Section icon={Box} title="Object" open={openSection === "object"} onToggle={() => toggleSection("object")}>
         <div className="space-y-2">
+          <div className="flex justify-between gap-3">
+            <Label className="text-xs font-medium text-muted-foreground">Geometry Mode</Label>
+            <span className="text-xs text-muted-foreground">{MODE_OPTIONS.find((opt) => opt.value === mode)?.label}</span>
+          </div>
+          <select
+            value={mode}
+            onChange={(e) => onModeChange(e.target.value as GeometryMode)}
+            className="w-full h-10 rounded-xl border border-white/10 bg-black/40 backdrop-blur shadow-inner px-3 pr-8 text-[13px] text-white/90 ring-offset-background focus:outline-none focus:ring-1 focus:ring-primary/50 appearance-none bg-no-repeat bg-[right_12px_center] bg-[length:12px]"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, strokeOpacity: 0.4 }}
+          >
+            {MODE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-[11px] text-white/45">{MODE_OPTIONS.find((opt) => opt.value === mode)?.description}</p>
+        </div>
+
+        {mode === "volume" && (
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2">
+            <p className="text-[11px] leading-relaxed text-white/55">
+              Volume keeps the front silhouette but rounds the body so icons and mascots read better from 3/4 angles.
+            </p>
+          </div>
+        )}
+
+        <div className="space-y-2">
           <div className="relative flex items-center gap-2 h-8 rounded-md border border-input bg-background/30 px-2 cursor-pointer overflow-hidden">
             <input type="color" value={color} onChange={(e) => onColorChange(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
             <div className="h-4 w-4 rounded-sm border border-white/10 shrink-0" style={{ backgroundColor: color }} />
@@ -359,7 +417,7 @@ export function ControlsPanel({
 
         <div className="space-y-2">
           <div className="flex justify-between">
-            <Label className="text-xs font-medium text-muted-foreground">Depth</Label>
+            <Label className="text-xs font-medium text-muted-foreground">{mode === "volume" ? "Thickness" : "Depth"}</Label>
             <span className="text-xs text-muted-foreground font-mono">{depth.toFixed(1)}</span>
           </div>
           <Slider value={[depth]} onValueChange={([v]) => onDepthChange(v)} min={0.5} max={10} step={0.1} />
@@ -372,6 +430,50 @@ export function ControlsPanel({
           </div>
           <Slider value={[smoothness]} onValueChange={([v]) => onSmoothnessChange(v)} min={0} max={1} step={0.05} />
         </div>
+
+        {mode === "volume" && (
+          <>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <Label className="text-xs font-medium text-muted-foreground">Inflate</Label>
+                <span className="text-xs text-muted-foreground font-mono">{(volumeInflate * 100).toFixed(0)}%</span>
+              </div>
+              <Slider value={[volumeInflate]} onValueChange={([v]) => onVolumeInflateChange(v)} min={0} max={1} step={0.05} />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <Label className="text-xs font-medium text-muted-foreground">Front Roundness</Label>
+                <span className="text-xs text-muted-foreground font-mono">{(volumeFrontRoundness * 100).toFixed(0)}%</span>
+              </div>
+              <Slider value={[volumeFrontRoundness]} onValueChange={([v]) => onVolumeFrontRoundnessChange(v)} min={0} max={1} step={0.05} />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <Label className="text-xs font-medium text-muted-foreground">Back Roundness</Label>
+                <span className="text-xs text-muted-foreground font-mono">{(volumeBackRoundness * 100).toFixed(0)}%</span>
+              </div>
+              <Slider value={[volumeBackRoundness]} onValueChange={([v]) => onVolumeBackRoundnessChange(v)} min={0} max={1} step={0.05} />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <Label className="text-xs font-medium text-muted-foreground">Edge Softness</Label>
+                <span className="text-xs text-muted-foreground font-mono">{(volumeEdgeSoftness * 100).toFixed(0)}%</span>
+              </div>
+              <Slider value={[volumeEdgeSoftness]} onValueChange={([v]) => onVolumeEdgeSoftnessChange(v)} min={0} max={1} step={0.05} />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <Label className="text-xs font-medium text-muted-foreground">Detail Strength</Label>
+                <span className="text-xs text-muted-foreground font-mono">{(volumeDetailStrength * 100).toFixed(0)}%</span>
+              </div>
+              <Slider value={[volumeDetailStrength]} onValueChange={([v]) => onVolumeDetailStrengthChange(v)} min={0} max={1} step={0.05} />
+            </div>
+          </>
+        )}
 
         <div className="space-y-2">
           <div className="flex justify-between gap-3">
@@ -448,6 +550,9 @@ export function ControlsPanel({
 
       {/* 4. Material */}
       <Section icon={Palette} title="Material" open={openSection === "material"} onToggle={() => toggleSection("material")}>
+        {mode === "volume" && (
+          <p className="text-[11px] text-white/45">Clay and plastic usually read form best in Volume mode.</p>
+        )}
         <div className="space-y-2">
           <select
             value={materialSettings.preset}

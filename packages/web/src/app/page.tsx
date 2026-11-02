@@ -26,8 +26,12 @@ import { InputPanel } from "@/components/input-panel";
 import { ControlsPanel } from "@/components/controls-panel";
 import { ExportModal } from "@/components/export-bar";
 import {
+  createMaterialSettings,
   defaultTextureSettings,
   defaultMaterialSettings,
+  materialSettingsMatch,
+  modeMaterialDefaults,
+  type GeometryMode,
   type QualityProfile,
   type TextureSettings,
   type MaterialSettings,
@@ -44,6 +48,9 @@ const SVGTo3DCanvas = dynamic(
   }
 );
 
+const DEFAULT_EXTRUDE_MATERIAL = modeMaterialDefaults.extrude;
+const DEFAULT_VOLUME_MATERIAL = modeMaterialDefaults.volume;
+
 export default function Home() {
   // --- Editor state ---
   const [customSvg, setCustomSvg] = useState("");
@@ -51,8 +58,14 @@ export default function Home() {
   const [pixelSvg, setPixelSvg] = useState("");
   const [textSvg, setTextSvg] = useState("");
   const [inputTab, setInputTab] = useState("draw");
+  const [mode, setMode] = useState<GeometryMode>("extrude");
   const [depth, setDepth] = useState(1);
   const [smoothness, setSmoothness] = useState(0.6);
+  const [volumeInflate, setVolumeInflate] = useState(0.55);
+  const [volumeFrontRoundness, setVolumeFrontRoundness] = useState(0.65);
+  const [volumeBackRoundness, setVolumeBackRoundness] = useState(0.45);
+  const [volumeEdgeSoftness, setVolumeEdgeSoftness] = useState(0.6);
+  const [volumeDetailStrength, setVolumeDetailStrength] = useState(0.5);
   const [qualityProfile, setQualityProfile] = useState<QualityProfile>("standard");
   const [antiFlicker, setAntiFlicker] = useState(true);
   const [color, setColor] = useState("#4f46e5");
@@ -81,6 +94,7 @@ export default function Home() {
   const [currentText, setCurrentText] = useState("3DSVG");
   const [currentFont, setCurrentFont] = useState("Rubik Mono One");
   const [inputPanelOpen, setInputPanelOpen] = useState(false);
+  const previousModeRef = useRef<GeometryMode>("extrude");
 
   // --- Export bar ---
   const [exportOpen] = useState(true);
@@ -178,10 +192,25 @@ export default function Home() {
   const tabSvg = svgByTab[inputTab] ?? "";
   const [lastActiveSvg, setLastActiveSvg] = useState("");
   const [lastActiveInputTab, setLastActiveInputTab] = useState(inputTab);
-  if (tabSvg && (tabSvg !== lastActiveSvg || inputTab !== lastActiveInputTab)) {
-    setLastActiveSvg(tabSvg);
-    setLastActiveInputTab(inputTab);
-  }
+  useEffect(() => {
+    if (!tabSvg) return;
+    setLastActiveSvg((prev) => prev === tabSvg ? prev : tabSvg);
+    setLastActiveInputTab((prev) => prev === inputTab ? prev : inputTab);
+  }, [tabSvg, inputTab]);
+
+  useEffect(() => {
+    const previousMode = previousModeRef.current;
+    previousModeRef.current = mode;
+
+    if (
+      previousMode !== mode &&
+      mode === "volume" &&
+      materialSettingsMatch(materialSettings, DEFAULT_EXTRUDE_MATERIAL)
+    ) {
+      setMaterialSettings(createMaterialSettings(DEFAULT_VOLUME_MATERIAL.preset));
+    }
+  }, [mode, materialSettings]);
+
   const activeSvg = tabSvg || lastActiveSvg;
   const activeSvgTab = tabSvg ? inputTab : lastActiveInputTab;
   const preserveSvgColors = activeSvgTab !== "text";
@@ -192,8 +221,14 @@ export default function Home() {
       <div className="absolute inset-0 z-0">
         <SVGTo3DCanvas
           svg={activeSvg}
+          mode={mode}
           depth={depth}
           smoothness={smoothness}
+          volumeInflate={volumeInflate}
+          volumeFrontRoundness={volumeFrontRoundness}
+          volumeBackRoundness={volumeBackRoundness}
+          volumeEdgeSoftness={volumeEdgeSoftness}
+          volumeDetailStrength={volumeDetailStrength}
           qualityProfile={qualityProfile}
           antiFlicker={antiFlicker}
           color={color}
@@ -351,6 +386,18 @@ export default function Home() {
               onDepthChange={setDepth}
               smoothness={smoothness}
               onSmoothnessChange={setSmoothness}
+              volumeInflate={volumeInflate}
+              onVolumeInflateChange={setVolumeInflate}
+              volumeFrontRoundness={volumeFrontRoundness}
+              onVolumeFrontRoundnessChange={setVolumeFrontRoundness}
+              volumeBackRoundness={volumeBackRoundness}
+              onVolumeBackRoundnessChange={setVolumeBackRoundness}
+              volumeEdgeSoftness={volumeEdgeSoftness}
+              onVolumeEdgeSoftnessChange={setVolumeEdgeSoftness}
+              volumeDetailStrength={volumeDetailStrength}
+              onVolumeDetailStrengthChange={setVolumeDetailStrength}
+              mode={mode}
+              onModeChange={setMode}
               qualityProfile={qualityProfile}
               onQualityProfileChange={setQualityProfile}
               antiFlicker={antiFlicker}
@@ -418,8 +465,14 @@ export default function Home() {
         meshGroupRef={meshGroupRef}
         modelSource={{
           svgString: activeSvg,
+          mode,
           depth,
           smoothness,
+          volumeInflate,
+          volumeFrontRoundness,
+          volumeBackRoundness,
+          volumeEdgeSoftness,
+          volumeDetailStrength,
           antiFlicker,
           color,
           preserveSvgColors,
